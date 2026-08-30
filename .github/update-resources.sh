@@ -158,8 +158,8 @@ update_dashboard() {
 	rm -rf "$tmp_extract"
 }
 
-update_list "china_ip4" "1715173329/IPCIDR-CHINA" "master" "ipv4.txt"
-update_list "china_ip6" "1715173329/IPCIDR-CHINA" "master" "ipv6.txt"
+update_list "china_ip4" "gaoyifan/china-operator-ip" "ip-lists" "china.txt"
+update_list "china_ip6" "gaoyifan/china-operator-ip" "ip-lists" "china6.txt"
 update_list "gfw_list" "Loyalsoldier/v2ray-rules-dat" "release" "gfw.txt"
 update_list "china_list" "Loyalsoldier/v2ray-rules-dat" "release" "direct-list.txt"
 update_dashboard
