@@ -603,17 +603,17 @@ if (!isEmpty(main_node)) {
 				interrupt_exist_connections: (main_udp_urltest_interrupt === '1') ? true : null,
 			});
 			urltest_nodes = [...urltest_nodes, ...filter(main_udp_urltest_nodes, (l) => !~index(urltest_nodes, l))];
-		} else if (dedicated_udp_node) {
-			const main_udp_node_cfg = uci.get_all(uciconfig, main_udp_node) || {};
-			if (main_udp_node_cfg.type === 'wireguard') {
-				push(config.endpoints, generate_endpoint(main_udp_node_cfg));
-				config.endpoints[length(config.endpoints)-1].tag = 'main-udp-out';
-			} else if (main_udp_node_cfg.type) {
-				push(config.outbounds, generate_outbound(main_udp_node_cfg));
-				config.outbounds[length(config.outbounds)-1].tag = 'main-udp-out';
-			}
 		} else if (main_udp_node !== 'nil' && first_node_id && main_node !== 'nil') {
 			main_udp_node = 'same';
+		}
+	} else if (dedicated_udp_node) {
+		const main_udp_node_cfg = uci.get_all(uciconfig, main_udp_node) || {};
+		if (main_udp_node_cfg.type === 'wireguard') {
+			push(config.endpoints, generate_endpoint(main_udp_node_cfg));
+			config.endpoints[length(config.endpoints)-1].tag = 'main-udp-out';
+		} else if (main_udp_node_cfg.type) {
+			push(config.outbounds, generate_outbound(main_udp_node_cfg));
+			config.outbounds[length(config.outbounds)-1].tag = 'main-udp-out';
 		}
 	}
 
