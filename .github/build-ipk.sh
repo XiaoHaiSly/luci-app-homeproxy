@@ -55,7 +55,7 @@ EOF
 
 po2lmo "$PKG_DIR/po/zh_Hans/homeproxy.po" "$TEMP_PKG_DIR/usr/lib/lua/luci/i18n/homeproxy.zh-cn.lmo"
 
-COMMON_DEPS_NOARCH="firewall4 ip-full kmod-tun kmod-nft-tproxy curl unzip ucode-mod-digest"
+COMMON_DEPS_NOARCH="firewall4 ip-full kmod-tun kmod-nft-tproxy curl unzip ucode-mod-digest flock"
 
 if [ "$PKG_MGR" == "apk" ]; then
 	find "$TEMP_PKG_DIR" -type f,l -printf '/%P\n' | sort > "$TEMP_PKG_DIR/lib/apk/packages/$PKG_NAME.list"
