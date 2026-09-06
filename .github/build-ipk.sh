@@ -43,10 +43,12 @@ cp -fpR "$PKG_DIR/htdocs"/* "$TEMP_PKG_DIR/www/"
 cp -fpR "$PKG_DIR/root"/* "$TEMP_PKG_DIR/"
 
 cat > "$TEMP_PKG_DIR/lib/upgrade/keep.d/$PKG_NAME" <<-EOF
+/etc/config/homeproxy
 /etc/homeproxy/cache/
 /etc/homeproxy/certs/
-/etc/homeproxy/dashboard/
+/etc/homeproxy/custom/
 /etc/homeproxy/ruleset/
+/etc/homeproxy/dashboard/
 /etc/homeproxy/resources/direct_list.txt
 /etc/homeproxy/resources/proxy_list.txt
 EOF
