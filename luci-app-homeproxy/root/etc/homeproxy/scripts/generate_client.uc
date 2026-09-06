@@ -475,6 +475,26 @@ if (!isEmpty(main_node)) {
 	}
 }
 
+function hasForceProxyRules() {
+	if (length(proxy_domain_list))
+		return true;
+
+	const options = [
+		'lan_proxy_ipv4_ips', 'lan_proxy_ipv6_ips', 'lan_proxy_mac_addrs',
+		'wan_proxy_ipv4_ips', 'wan_proxy_ipv6_ips',
+		'lan_global_proxy_ipv4_ips', 'lan_global_proxy_ipv6_ips', 'lan_global_proxy_mac_addrs',
+		'lan_gaming_mode_ipv4_ips', 'lan_gaming_mode_ipv6_ips', 'lan_gaming_mode_mac_addrs'
+	];
+	for (let option in options)
+		if (!isEmpty(uci.get(uciconfig, ucicontrol, option)))
+			return true;
+
+	return false;
+}
+
+const force_proxy_rules = (match(proxy_mode, /tun/) && !isEmpty(main_node)) ? hasForceProxyRules() : false;
+const fast_bypass_mainland = routing_mode === 'bypass_mainland_china' && !force_proxy_rules;
+
 config.inbounds = [];
 
 push(config.inbounds, {
@@ -526,7 +546,8 @@ if (match(proxy_mode, /tun/))
 		exclude_mptcp: true,
 		dns_mode: 'hijack',
 		include_interface: config_included_interfaces,
-		route_exclude_address: length(local_interface_cidrs) ? local_interface_cidrs : null
+		route_exclude_address: length(local_interface_cidrs) ? local_interface_cidrs : null,
+		route_exclude_address_set: fast_bypass_mainland ? ['geoip-cn'] : null
 	});
 
 config.endpoints = [];
