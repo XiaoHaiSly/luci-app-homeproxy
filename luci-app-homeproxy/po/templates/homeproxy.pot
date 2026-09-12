@@ -20,10 +20,6 @@ msgstr ""
 msgid "<strong>Save your configuration before uploading files!</strong>"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:374
-msgid "Actions"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:482
 msgid "Active core"
 msgstr ""
@@ -173,10 +169,6 @@ msgstr ""
 msgid "Auto update"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1590
-msgid "Auto Update"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1336
 msgid "Auto update subscriptions and geodata."
 msgstr ""
@@ -247,18 +239,6 @@ msgstr ""
 msgid "Checking..."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1629
-msgid "Choose File"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:164
-msgid "Clash API"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1610
-msgid "Core Config Editor"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:468
 msgid "Core management"
 msgstr ""
@@ -301,14 +281,6 @@ msgstr ""
 msgid "Downloading"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:124
-msgid "Failed to restart the homeproxy service: %s"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1648
-msgid "File Content"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:243
 msgid "Installing (service will restart)..."
 msgstr ""
@@ -316,10 +288,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/status.js:200
 #: htdocs/luci-static/resources/view/homeproxy/status.js:281
 msgid "Latest"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:173
-msgid "More than one dashboard is configured. Choose which one to open:"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:384
@@ -1410,14 +1378,6 @@ msgstr ""
 msgid "REALITY short ID"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:390
-msgid "Restart service"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:386
-msgid "Restart the homeproxy service"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:497
 msgid "Restore core"
 msgstr ""
@@ -1515,10 +1475,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:201
 msgid "Stable"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1625
-msgid "Subscription: %s"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1177
@@ -1955,10 +1911,6 @@ msgstr ""
 msgid "Update core"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1595
-msgid "Update Interval (minutes)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:251
 msgid "Updated successfully"
 msgstr ""
@@ -2288,31 +2240,6 @@ msgstr ""
 msgid "valid uuid"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:91
-#: htdocs/luci-static/resources/view/homeproxy/client.js:102
-msgid "No core config file is selected yet."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:111
-msgid "Failed to parse the core config file as JSON."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:121
-msgid "Failed to open dashboard: %s"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:191
-msgid "Core only"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:217
-msgid "Core config file"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:219
-msgid "-- none --"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:329
 msgid "Dashboard"
 msgstr ""
@@ -2321,76 +2248,20 @@ msgstr ""
 msgid "Open dashboard"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1464
-msgid "Core Config"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1466
-msgid "Upload Profile"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1476
 msgid "Subscription"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1482
-msgid "Edit Subscription"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1484
-msgid "Subscription Name"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1487
 msgid "Used"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1492
-msgid "Total"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1497
-msgid "Expire At"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1502
-msgid "Update At"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1510
 msgid "Update"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1516
-msgid "Failed to fetch core config: %s"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1520
-msgid "Subscription Info Url"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1523
-msgid "Subscription Url"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1527
-msgid "User Agent"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1588
 msgid "Prefer"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1562
-msgid "Failed to fetch \"%s\". Check the subscription URL and try again."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1555
-msgid "Updating Subscription"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1556
-msgid "Fetching \"%s\" ..."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:559

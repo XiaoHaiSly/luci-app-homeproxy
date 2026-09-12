@@ -211,7 +211,7 @@ export function reconcileUrltestNodes(uci, config, logger) {
 				'Main URLTest group is empty; disabling the client.' :
 				sprintf('Main URLTest group is empty; switching main node to %s.', fallback));
 		}
-	} else if (main_node !== 'nil' && main_node !== 'core_only' && uci.get(config, main_node) !== 'node') {
+	} else if (main_node !== 'nil' && uci.get(config, main_node) !== 'node') {
 		const fallback = fallbackFirstNode();
 		uci.set(config, 'config', 'main_node', fallback);
 		changed = true;

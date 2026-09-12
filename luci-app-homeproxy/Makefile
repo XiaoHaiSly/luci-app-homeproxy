@@ -24,7 +24,6 @@ define Package/luci-app-homeproxy/conffiles
 /etc/config/homeproxy
 /etc/homeproxy/cache/
 /etc/homeproxy/certs/
-/etc/homeproxy/custom/
 /etc/homeproxy/ruleset/
 /etc/homeproxy/dashboard/
 /etc/homeproxy/resources/direct_list.txt

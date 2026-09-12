@@ -242,14 +242,6 @@ msgstr "取消"
 msgid "Certificate path"
 msgstr "证书路径"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:173
-msgid "Clash API"
-msgstr "Clash API"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:184
-msgid "More than one dashboard is configured. Choose which one to open:"
-msgstr "检测到配置了多个面板，请选择要打开的面板："
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:57
 msgid "Check"
 msgstr "检查"
@@ -2216,150 +2208,29 @@ msgstr "有效端口值"
 msgid "valid uuid"
 msgstr "有效 uuid"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:91
-#: htdocs/luci-static/resources/view/homeproxy/client.js:102
-msgid "No core config file is selected yet."
-msgstr "尚未选择核心配置文件。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:111
-msgid "Failed to parse the core config file as JSON."
-msgstr "解析核心配置文件（JSON）失败。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:121
-msgid "Failed to open dashboard: %s"
-msgstr "打开面板失败：%s"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:191
-msgid "Core only"
-msgstr "核心模式"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:217
-msgid "Core config file"
-msgstr "核心配置文件"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:219
-msgid "-- none --"
-msgstr "-- 无 --"
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:329
 msgid "Dashboard"
 msgstr "仪表盘"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:264
-msgid "Restart service"
-msgstr "重启服务"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:265
-msgid "Restart the homeproxy service"
-msgstr "重启 homeproxy 服务"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:102
-msgid "Failed to restart the homeproxy service: %s"
-msgstr "重启 homeproxy 服务失败:%s"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:228
 msgid "Open dashboard"
 msgstr "打开面板"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:338
-msgid "Actions"
-msgstr "操作"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1464
-msgid "Core Config"
-msgstr "核心配置"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1648
-msgid "Core Config Editor"
-msgstr "配置编辑器"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1661
-msgid "Subscription: %s"
-msgstr "订阅：%s"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1665
-msgid "Choose File"
-msgstr "选择文件"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1684
-msgid "File Content"
-msgstr "文件内容"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1466
-msgid "Upload Profile"
-msgstr "上传配置文件"
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1476
 msgid "Subscription"
 msgstr "订阅"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1482
-msgid "Edit Subscription"
-msgstr "编辑订阅"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1484
-msgid "Subscription Name"
-msgstr "订阅名称"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1487
 msgid "Used"
 msgstr "已使用"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1492
-msgid "Total"
-msgstr "总量"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1497
-msgid "Expire At"
-msgstr "到期时间"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1502
-msgid "Update At"
-msgstr "更新时间"
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1510
 msgid "Update"
 msgstr "更新"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1516
-msgid "Failed to fetch core config: %s"
-msgstr "拉取核心配置失败：%s"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1520
-msgid "Subscription Info Url"
-msgstr "订阅信息链接"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1523
-msgid "Subscription Url"
-msgstr "订阅链接"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1527
-msgid "User Agent"
-msgstr "用户代理（UA）"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1533
-msgid "Auto Update"
-msgstr "自动更新"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1538
-msgid "Update Interval (minutes)"
-msgstr "更新间隔（分钟）"
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1588
 msgid "Prefer"
 msgstr "优先"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1562
-msgid "Failed to fetch \"%s\". Check the subscription URL and try again."
-msgstr "拉取“%s”失败，请检查订阅链接后重试。"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1555
-msgid "Updating Subscription"
-msgstr "正在更新订阅"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1556
-msgid "Fetching \"%s\" ..."
-msgstr "正在拉取“%s” ..."
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:295
 msgid "Active core"

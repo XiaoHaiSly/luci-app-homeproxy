@@ -81,144 +81,13 @@ let stubValidator = {
 	}
 };
 
-function openDashboardUrl(apiPort, apiSecret) {
-	const params = new URLSearchParams({
-		host: window.location.hostname,
-		hostname: window.location.hostname,
-		port: apiPort,
-		secret: apiSecret || ''
-	}).toString();
-
-	window.open(`http://${window.location.hostname}:${apiPort}/ui/?${params}`, '_blank');
-}
-
-function isCoreOnlyActive() {
-	return uci.get('homeproxy', 'config', 'main_node') === 'core_only';
-}
-
 function isNormalModeActive() {
 	let main_node = uci.get('homeproxy', 'config', 'main_node');
-	return main_node !== 'core_only' && main_node !== 'nil';
+	return main_node !== 'nil';
 }
 
 function noopFeedback() {
 	return new Promise((resolve) => setTimeout(resolve, 400));
-}
-
-const callRcInit = rpc.declare({
-	object: 'rc',
-	method: 'init',
-	params: ['name', 'action']
-});
-
-function restartService(refreshStatus) {
-	if (!isCoreOnlyActive())
-		return noopFeedback();
-
-	return callRcInit('homeproxy', 'restart').then(() => {
-		return new Promise((resolve) => setTimeout(resolve, 1500));
-	}).then(() => {
-		if (refreshStatus)
-			return refreshStatus();
-	}).catch((err) => {
-		ui.addNotification(null, E('p', _('Failed to restart the homeproxy service: %s').format(err)));
-	});
-}
-
-function openDashboard() {
-	if (!isCoreOnlyActive())
-		return noopFeedback();
-
-	const selection = uci.get('homeproxy', 'config', 'main_core_profile');
-	if (!selection) {
-		ui.addNotification(null, E('p', _('No core config file is selected yet.')));
-		return;
-	}
-
-	let path;
-	if (selection.indexOf('file:') === 0)
-		path = '/etc/homeproxy/custom/' + selection.substring(5);
-	else if (selection.indexOf('sub:') === 0)
-		path = '/etc/homeproxy/custom/.subscriptions/' + selection.substring(4) + '.json';
-
-	if (!path) {
-		ui.addNotification(null, E('p', _('No core config file is selected yet.')));
-		return;
-	}
-
-	function extractApiConfigs(conf) {
-		let configs = [];
-
-		if (Array.isArray(conf?.services)) {
-			for (let svc of conf.services) {
-				if (svc && svc.type === 'api' && svc.listen_port) {
-					let label = (svc.dashboard && svc.dashboard.path) || _('Dashboard');
-					configs.push({ port: svc.listen_port, secret: svc.secret, label: `${label} (:${svc.listen_port})` });
-				}
-			}
-		}
-
-		const clash = conf?.experimental?.clash_api;
-		if (clash && clash.external_controller) {
-			const port = clash.external_controller.substring(clash.external_controller.lastIndexOf(':') + 1);
-			let label = clash.external_ui || _('Clash API');
-			configs.push({ port: port, secret: clash.secret, label: `${label} (:${port})` });
-		}
-
-		return configs;
-	}
-
-	function pickDashboard(apis) {
-		ui.showModal(_('Open dashboard'), [
-			E('p', _('More than one dashboard is configured. Choose which one to open:')),
-			E('div', { 'class': 'cbi-section' },
-				apis.map((api) => E('button', {
-					'class': 'btn cbi-button cbi-button-action',
-					'style': 'display:block; width:100%; margin-bottom:.5em;',
-					'click': () => {
-						ui.hideModal();
-						openDashboardUrl(api.port, api.secret);
-					}
-				}, [api.label]))
-			),
-			E('div', { 'class': 'right' },
-				E('button', { 'class': 'btn', 'click': ui.hideModal }, _('Cancel'))
-			)
-		]);
-	}
-
-	function openFromConfig(content) {
-		let conf;
-		try {
-			conf = JSON.parse(content);
-		} catch (e) {
-			throw _('Failed to parse the core config file as JSON.');
-		}
-
-		const apis = extractApiConfigs(conf);
-		if (apis.length === 0) {
-			let err = new Error('no dashboard configured');
-			err.silent = true;
-			throw err;
-		}
-
-		if (apis.length === 1)
-			openDashboardUrl(apis[0].port, apis[0].secret);
-		else
-			pickDashboard(apis);
-	}
-
-	return fs.read_direct('/var/run/homeproxy/sing-box-core.json', 'text').then((runtimeContent) => {
-		openFromConfig(runtimeContent);
-	}).catch(() => {
-		return fs.read_direct(path, 'text').then((content) => {
-			openFromConfig(content);
-		});
-	}).catch((err) => {
-		if (err && err.silent)
-			return;
-		ui.addNotification(null, E('p', _('Failed to open dashboard: %s').format(err)));
-	});
 }
 
 return view.extend({
@@ -226,8 +95,7 @@ return view.extend({
 		return Promise.all([
 			uci.load('homeproxy'),
 			hp.getBuiltinFeatures(),
-			network.getHostHints(),
-			L.resolveDefault(fs.list('/etc/homeproxy/custom'), [])
+			network.getHostHints()
 		]);
 	},
 
@@ -245,15 +113,6 @@ return view.extend({
 			proxy_nodes[res['.name']] =
 				String.format('[%s] %s', res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
 					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
-		});
-
-		let core_profiles = {};
-		for (let f of (data[3] || []))
-			if (f.type === 'file')
-				core_profiles['file:' + f.name] = f.name;
-		uci.sections(data[0], 'custom_profile', (res) => {
-			const profile_id = res.id || res['.name'];
-			core_profiles['sub:' + profile_id] = res.label || profile_id;
 		});
 
 		function formatDelay(delay) {
@@ -322,7 +181,6 @@ return view.extend({
 
 		o = s.taboption('routing', form.ListValue, 'main_node', _('Main node'));
 		o.value('nil', _('Disable'));
-		o.value('core_only', _('Core only'));
 		o.value('urltest', _('URLTest'));
 		for (let i in proxy_nodes)
 			o.value(i, proxy_nodes[i]);
@@ -353,15 +211,6 @@ return view.extend({
 		o.rmempty = false;
 		o.depends('main_node', 'urltest');
 
-		o = s.taboption('routing', form.ListValue, 'main_core_profile', _('Core config file'));
-		if (!Object.keys(core_profiles).length)
-			o.value('', _('-- none --'));
-		else
-			for (let i in core_profiles)
-				o.value(i, core_profiles[i]);
-		o.depends('main_node', 'core_only');
-		o.rmempty = false;
-
 		o = s.taboption('routing', form.ListValue, 'main_udp_node', _('Main UDP node'));
 		o.value('nil', _('Disable'));
 		o.value('same', _('Same as main node'));
@@ -369,56 +218,31 @@ return view.extend({
 		for (let i in proxy_nodes)
 			o.value(i, proxy_nodes[i]);
 		o.default = 'same';
-		o.depends({'main_node': /^((?!core_only).)+$/});
 		o.rmempty = false;
-
-		o = s.taboption('routing', form.Button, '_open_dashboard', _('Actions'));
-		o.inputstyle = 'apply';
-		o.inputtitle = _('Open dashboard');
-		o.depends('main_node', 'core_only');
-		o.onclick = function() {
-			return openDashboard();
-		}
-		o.renderWidget = function() {
-			let node = form.Button.prototype.renderWidget.apply(this, arguments);
-
-			let restartBtn = E('button', {
-				'class': 'cbi-button cbi-button-reset',
-				'title': _('Restart the homeproxy service'),
-				'click': ui.createHandlerFn(this, () => {
-					return restartService(refreshStatus);
-				}, this.option)
-			}, [ _('Restart service') ]);
-
-			return E('div', { 'style': 'display: flex; flex-wrap: wrap; align-items: center; gap: .5em; max-width: 100%' }, [
-				node,
-				restartBtn
-			]);
-		}
 
 		o = s.taboption('routing', hp.CBIStaticList, 'main_udp_urltest_nodes', _('URLTest nodes'),
 			_('List of nodes to test.'));
 		for (let i in proxy_nodes)
 			o.value(i, proxy_nodes[i]);
-		o.depends({'main_udp_node': 'urltest', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'main_udp_node': 'urltest'});
 		o.rmempty = false;
 
 		o = s.taboption('routing', form.Value, 'main_udp_urltest_interval', _('Test interval'),
 			_('The test interval in seconds.'));
 		o.datatype = 'uinteger';
 		o.placeholder = '180';
-		o.depends({'main_udp_node': 'urltest', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'main_udp_node': 'urltest'});
 
 		o = s.taboption('routing', form.Value, 'main_udp_urltest_tolerance', _('Test tolerance'),
 			_('The test tolerance in milliseconds.'));
 		o.datatype = 'uinteger';
 		o.placeholder = '50';
-		o.depends({'main_udp_node': 'urltest', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'main_udp_node': 'urltest'});
 
 		o = s.taboption('routing', form.Flag, 'main_udp_urltest_interrupt_exist_connections', _('Interrupt existing connections'));
 		o.default = o.enabled;
 		o.rmempty = false;
-		o.depends({'main_udp_node': 'urltest', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'main_udp_node': 'urltest'});
 
 		o = s.taboption('routing', form.Value, 'dns_server', _('DNS server'),
 			_('Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified.'));
@@ -432,8 +256,8 @@ return view.extend({
 		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
 		o.default = '8.8.8.8';
 		o.rmempty = false;
-		o.depends({'routing_mode': 'bypass_mainland_china', 'main_node': /^((?!core_only).)+$/});
-		o.depends({'routing_mode': 'global', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'routing_mode': 'bypass_mainland_china'});
+		o.depends({'routing_mode': 'global'});
 		o.validate = function(section_id, value) {
 			if (section_id && !['wan'].includes(value)) {
 				if (!value)
@@ -465,7 +289,7 @@ return view.extend({
 		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
 		o.value('180.184.1.1', _('ByteDance Public DNS (180.184.1.1)'));
 		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
-		o.depends({'routing_mode': 'bypass_mainland_china', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'routing_mode': 'bypass_mainland_china'});
 		o.default = '223.5.5.5';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
@@ -497,13 +321,11 @@ return view.extend({
 		o.value('global', _('Global'));
 		o.default = 'bypass_mainland_china';
 		o.rmempty = false;
-		o.depends({'main_node': /^((?!core_only).)+$/});
 
 		o = s.taboption('routing', form.Value, 'routing_port', _('Routing ports'),
 			_('Specify target ports to be proxied. Multiple ports must be separated by commas.'));
 		o.value('', _('All ports'));
 		o.value('common', _('Common ports only (bypass P2P traffic)'));
-		o.depends({'main_node': /^((?!core_only).)+$/});
 		o.validate = function(section_id, value) {
 			if (section_id && value && value !== 'common') {
 
@@ -528,7 +350,6 @@ return view.extend({
 		}
 		o.default = 'tun';
 		o.rmempty = false;
-		o.depends({'main_node': /^((?!core_only).)+$/});
 
 		o = s.taboption('routing', form.ListValue, 'tcpip_stack', _('TCP/IP stack'),
 			_('TCP/IP stack.'));
@@ -538,7 +359,7 @@ return view.extend({
 		}
 		o.value('system', _('System'));
 		o.default = 'mixed';
-		o.depends({'proxy_mode': 'tun', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'proxy_mode': 'tun'});
 		o.rmempty = false;
 		o.onchange = function(ev, section_id, value) {
 			let desc = ev.target.nextElementSibling;
@@ -553,11 +374,10 @@ return view.extend({
 		o = s.taboption('routing', form.Flag, 'ipv6_support', _('IPv6 support'));
 		o.default = o.enabled;
 		o.rmempty = false;
-		o.depends({'main_node': /^((?!core_only).)+$/});
 
 		s.tab('app_rules', _('Proxy Rules'));
 		o = s.taboption('app_rules', form.SectionValue, '_app_rules', form.GridSection, 'app_rule');
-		o.depends({'routing_mode': 'bypass_mainland_china', 'proxy_mode': 'tun', 'main_node': /^((?!core_only).)+$/});
+		o.depends({'routing_mode': 'bypass_mainland_china', 'proxy_mode': 'tun'});
 
 		ss = o.subsection;
 		ss.addremove = true;
@@ -706,17 +526,14 @@ return view.extend({
 		o.default = '9096';
 		o.datatype = 'port';
 		o.rmempty = false;
-		o.depends({'main_node': /^((?!core_only).)+$/});
 
 		o = s.taboption('dashboard', form.Value, 'dashboard_secret', _('API secret'));
 		o.password = true;
 		o.rmempty = true;
-		o.depends({'main_node': /^((?!core_only).)+$/});
 
 		o = s.taboption('dashboard', form.Button, '_open_dashboard_normal', _('sing-box dashboard'));
 		o.inputtitle = _('Open dashboard');
 		o.inputstyle = 'apply';
-		o.depends({'main_node': /^((?!core_only).)+$/});
 		o.onclick = function() {
 			if (!isNormalModeActive())
 				return noopFeedback();
@@ -731,7 +548,6 @@ return view.extend({
 		s.tab('control', _('Access Control'));
 
 		o = s.taboption('control', form.SectionValue, '_control', form.NamedSection, 'control', 'homeproxy');
-		o.depends({'main_node': /^((?!core_only).)+$/});
 		ss = o.subsection;
 
 		ss.tab('interface', _('Interface Control'));
@@ -740,13 +556,11 @@ return view.extend({
 			_('Only process traffic from specific interfaces. Leave empty for all.'));
 		so.multiple = true;
 		so.noaliases = true;
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = ss.taboption('interface', widgets.DeviceSelect, 'bind_interface', _('Bind interface'),
 			_('Bind outbound traffic to specific interface. Leave empty to auto detect.'));
 		so.multiple = false;
 		so.noaliases = true;
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		ss.tab('lan_ip_policy', _('LAN IP Policy'));
 
@@ -756,61 +570,54 @@ return view.extend({
 		so.value('except_listed', _('Proxy all except listed'));
 		so.default = 'disabled';
 		so.rmempty = false;
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_direct_ipv4_ips', _('Direct IPv4 IP-s'), null, 'ipv4', hosts, true);
-		so.depends({'lan_proxy_mode': 'except_listed', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'except_listed'});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_direct_ipv6_ips', _('Direct IPv6 IP-s'), null, 'ipv6', hosts, true);
-		so.depends({'lan_proxy_mode': 'except_listed', 'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'except_listed', 'homeproxy.config.ipv6_support': '1'});
 
 		so = fwtool.addMACOption(ss, 'lan_ip_policy', 'lan_direct_mac_addrs', _('Direct MAC-s'), null, hosts);
-		so.depends({'lan_proxy_mode': 'except_listed', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'except_listed'});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_proxy_ipv4_ips', _('Proxy IPv4 IP-s'), null, 'ipv4', hosts, true);
-		so.depends({'lan_proxy_mode': 'listed_only', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'listed_only'});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_proxy_ipv6_ips', _('Proxy IPv6 IP-s'), null, 'ipv6', hosts, true);
-		so.depends({'lan_proxy_mode': 'listed_only', 'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'listed_only', 'homeproxy.config.ipv6_support': '1'});
 
 		so = fwtool.addMACOption(ss, 'lan_ip_policy', 'lan_proxy_mac_addrs', _('Proxy MAC-s'), null, hosts);
-		so.depends({'lan_proxy_mode': 'listed_only', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'lan_proxy_mode': 'listed_only'});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_gaming_mode_ipv4_ips', _('Gaming mode IPv4 IP-s'), null, 'ipv4', hosts, true);
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_gaming_mode_ipv6_ips', _('Gaming mode IPv6 IP-s'), null, 'ipv6', hosts, true);
-		so.depends({'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'homeproxy.config.ipv6_support': '1'});
 
 		so = fwtool.addMACOption(ss, 'lan_ip_policy', 'lan_gaming_mode_mac_addrs', _('Gaming mode MAC-s'), null, hosts);
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_global_proxy_ipv4_ips', _('Global proxy IPv4 IP-s'), null, 'ipv4', hosts, true);
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = fwtool.addIPOption(ss, 'lan_ip_policy', 'lan_global_proxy_ipv6_ips', _('Global proxy IPv6 IP-s'), null, 'ipv6', hosts, true);
-		so.depends({'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'homeproxy.config.ipv6_support': '1'});
 
 		so = fwtool.addMACOption(ss, 'lan_ip_policy', 'lan_global_proxy_mac_addrs', _('Global proxy MAC-s'), null, hosts);
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		ss.tab('wan_ip_policy', _('WAN IP Policy'));
 
 		so = ss.taboption('wan_ip_policy', form.DynamicList, 'wan_proxy_ipv4_ips', _('Proxy IPv4 IP-s'));
 		so.datatype = 'or(ip4addr, cidr4)';
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = ss.taboption('wan_ip_policy', form.DynamicList, 'wan_proxy_ipv6_ips', _('Proxy IPv6 IP-s'));
 		so.datatype = 'or(ip6addr, cidr6)';
-		so.depends({'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'homeproxy.config.ipv6_support': '1'});
 
 		so = ss.taboption('wan_ip_policy', form.DynamicList, 'wan_direct_ipv4_ips', _('Direct IPv4 IP-s'));
 		so.datatype = 'or(ip4addr, cidr4)';
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 
 		so = ss.taboption('wan_ip_policy', form.DynamicList, 'wan_direct_ipv6_ips', _('Direct IPv6 IP-s'));
 		so.datatype = 'or(ip6addr, cidr6)';
-		so.depends({'homeproxy.config.ipv6_support': '1', 'homeproxy.config.main_node': /^((?!core_only).)+$/});
+		so.depends({'homeproxy.config.ipv6_support': '1'});
 
 		ss.tab('proxy_domain_list', _('Proxy Domain List'));
 
@@ -818,7 +625,6 @@ return view.extend({
 		so.rows = 10;
 		so.monospace = true;
 		so.datatype = 'hostname';
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 		so.load = function() {
 			return L.resolveDefault(callReadDomainList('proxy_list')).then((res) => {
 				return res.content;
@@ -845,7 +651,6 @@ return view.extend({
 		so.rows = 10;
 		so.monospace = true;
 		so.datatype = 'hostname';
-		so.depends({'homeproxy.config.main_node': /^((?!core_only).)+$/});
 		so.load = function() {
 			return L.resolveDefault(callReadDomainList('direct_list')).then((res) => {
 				return res.content;

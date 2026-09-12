@@ -116,7 +116,7 @@ const main_node_setting = uci.get(uciconfig, ucimain, 'main_node') || 'nil';
 main_node = main_node_setting;
 main_udp_node = uci.get(uciconfig, ucimain, 'main_udp_node') || 'nil';
 const first_node_id = first_valid_node();
-if (main_node !== 'nil' && main_node !== 'core_only' && main_node !== 'urltest' && !uci.get_all(uciconfig, main_node)?.type)
+if (main_node !== 'nil' && main_node !== 'urltest' && !uci.get_all(uciconfig, main_node)?.type)
 	main_node = first_node_id || 'nil';
 if (main_udp_node !== 'nil' && main_udp_node !== 'same' && main_udp_node !== 'urltest' && !uci.get_all(uciconfig, main_udp_node)?.type)
 	main_udp_node = first_node_id || 'nil';

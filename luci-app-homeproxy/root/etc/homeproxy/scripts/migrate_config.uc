@@ -233,11 +233,5 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 		uci.delete(uciconfig, cfg['.name'], 'domain_strategy');
 });
 
-if (system('[ -d "/etc/homeproxy/custom/subscriptions" ]') == 0) {
-	system('mkdir -p "/etc/homeproxy/custom/.subscriptions"; ' +
-		'mv -f "/etc/homeproxy/custom/subscriptions/"*.json "/etc/homeproxy/custom/.subscriptions/" 2>/dev/null; ' +
-		'rmdir "/etc/homeproxy/custom/subscriptions" 2>/dev/null');
-}
-
 if (!isEmpty(uci.changes(uciconfig)))
 	uci.commit(uciconfig);

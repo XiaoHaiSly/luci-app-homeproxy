@@ -599,19 +599,6 @@ const methods = {
 
 			return job_read(`res_${type}`);
 		}
-	},
-
-	subscription_update: {
-		args: { section_id: 'section_id' },
-		call: function(req) {
-			if (!req.args?.section_id)
-				return { result: false, error: 'missing section_id' };
-
-			const section_id = shellquote(req.args?.section_id);
-			const exit_code = system(`/usr/bin/ucode -S ${HP_DIR}/scripts/update_custom_config.uc ${section_id}`);
-
-			return { result: (exit_code === 0), status: exit_code };
-		}
 	}
 };
 
