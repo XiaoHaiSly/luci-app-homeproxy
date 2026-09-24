@@ -49,7 +49,9 @@ PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/sagernet/sing-box
 GO_PKG_BUILD_PKG:=$(GO_PKG)/cmd/sing-box
-GO_PKG_LDFLAGS_X:=$(GO_PKG)/constant.Version=$(PKG_UPSTREAM_VERSION)
+GO_PKG_LDFLAGS_X:=$(GO_PKG)/constant.Version=$(PKG_UPSTREAM_VERSION) \
+	runtime.godebugDefault=multipathtcp=0,tlssha1=1
+GO_PKG_LDFLAGS:=-checklinkname=0
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
@@ -186,10 +188,10 @@ define Package/sing-box-tiny/config
 endef
 
 ifeq ($(BUILD_VARIANT),full)
-  GO_PKG_TAGS:=http2legacy,tfogo_checklinkname0,with_acme,with_call,with_ccm,with_clash_api,with_cloudflared,with_dhcp,with_gvisor,with_masque,with_mtproxy,with_ocm,with_openconnect,with_openvpn,with_quic,with_sudoku,with_tailscale,with_trusttunnel,with_usbip,with_utls,with_wireguard
+  GO_PKG_TAGS:=badlinkname,tfogo_checklinkname0,with_acme,with_call,with_ccm,with_clash_api,with_cloudflared,with_dhcp,with_gvisor,with_masque,with_mtproxy,with_ocm,with_openconnect,with_openvpn,with_quic,with_sudoku,with_tailscale,with_trusttunnel,with_usbip,with_utls,with_wireguard
 else
   GO_PKG_TAGS:=$(subst $(space),$(comma),$(strip \
-	http2legacy \
+	badlinkname \
 	tfogo_checklinkname0 \
 	$(if $(CONFIG_SING_BOX_TINY_BUILD_ACME),with_acme) \
 	$(if $(CONFIG_SING_BOX_TINY_BUILD_CALL),with_call) \
