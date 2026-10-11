@@ -11,11 +11,11 @@
 
 ## 主要增强
 
-- **TUN 模式**：统一使用 TUN 入站并启用 `auto_redirect`，TCP/UDP 均由 sing-box 处理
-- **分流规则**：按服务单独指定出口。内置 YouTube、TikTok、Telegram、Twitter/X、Google、Cloudflare、GitHub、AI 服务（非大陆）等预设，也可自定义规则；每条规则可单独选择走主节点、独立 URLTest、指定节点、直连或拒绝，并同步为该规则的域名选用对应的 DNS。支持拖动排序和单条启停，规则按顺序匹配。
 - **DNS Fallback**：主 DNS 与国内 DNS 均可配置多个备用服务器，支持 DNS 劫持
 - **XHTTP 支持**，新一代 Xray 传输方式
 - **sing-box 面板**：内置 Dashboard sing-box官方面板
+- **TUN 模式**：统一使用 TUN 入站并启用 `auto_redirect`，TCP/UDP 均由 sing-box 处理
+- **分流规则**：按服务单独指定出口。内置 YouTube、TikTok、Telegram、Twitter/X、Google、Cloudflare、GitHub、AI 服务（非大陆）等预设，也可自定义规则；每条规则可单独选择走主节点、独立 URLTest、指定节点、直连或拒绝，并同步为该规则的域名选用对应的 DNS。支持拖动排序和单条启停，规则按顺序匹配。
 - **在线更新核心**：可在界面中更新 sing-box 核心
 - 缓存与配置加载流程优化，提高运行稳定性
 
