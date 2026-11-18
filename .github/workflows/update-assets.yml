@@ -1,0 +1,93 @@
+name: HomeProxy 资源与面板更新
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repository-maintenance
+  cancel-in-progress: false
+
+env:
+  HP_DIR: luci-app-homeproxy/root/etc/homeproxy
+
+jobs:
+  update:
+    name: 检查并更新 resources 与 dashboard
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: 检出软件包仓库
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: 同步默认分支
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch origin "$PACKAGE_BRANCH"
+          git reset --hard "origin/$PACKAGE_BRANCH"
+
+      - name: 更新规则（china_ip4 / china_ip6）
+        id: resources
+        run: .github/scripts/update-homeproxy-resources.sh china_ip4 china_ip6
+
+      - name: 更新面板（dashboard）
+        id: dashboard
+        if: ${{ !cancelled() }}
+        run: .github/scripts/update-homeproxy-dashboard.sh
+
+      - name: 提交更新
+        if: ${{ !cancelled() }}
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+
+          local_head="$(git rev-parse HEAD)"
+          git fetch origin "$PACKAGE_BRANCH"
+          remote_head="$(git rev-parse "origin/$PACKAGE_BRANCH")"
+          if [[ "$local_head" != "$remote_head" ]]; then
+            printf '远端分支已更新，为避免提交冲突，本次任务停止：%s -> %s\n' \
+              "$local_head" "$remote_head" >&2
+            exit 75
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          commit_one() {
+            local label="$1" version="$2"
+            shift 2
+            git add -A -- "$@"
+            if git diff --cached --quiet; then
+              return 0
+            fi
+            git commit -m "chore: 更新 $label 至 $version"
+          }
+
+          res="$HP_DIR/resources"
+          dash="$HP_DIR/dashboard"
+
+          for name in china_ip4 china_ip6; do
+            commit_one china_ip "$(cat "$res/$name.ver" 2>/dev/null || echo unknown)" \
+              "$res/$name.txt" "$res/$name.ver"
+          done
+
+          commit_one dashboard \
+            "$(sed -n '1p' "$dash/dashboard.ver" 2>/dev/null || echo unknown)" \
+            "$dash"
+
+          if [[ "$(git rev-parse HEAD)" == "$local_head" ]]; then
+            echo '没有需要提交的变更。'
+            exit 0
+          fi
+          git push origin "HEAD:$PACKAGE_BRANCH"

@@ -1,0 +1,139 @@
+name: sing-box 版本检查同步
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repository-maintenance
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: 检查并更新 sing-box 核心
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: 检出软件包仓库
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: 同步默认分支
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch origin "$PACKAGE_BRANCH"
+          target="$(git rev-parse "origin/$PACKAGE_BRANCH")"
+          printf '同步仓库：%s，分支：%s，目标提交：%s\n' \
+            "$(pwd)" "$PACKAGE_BRANCH" "$target"
+          git reset --hard "origin/$PACKAGE_BRANCH"
+
+      - name: 检查 sing-box 上游版本
+        id: upstream
+        run: |
+          makefile='sing-box/Makefile'
+
+          upstream_tag="$(gh api 'repos/shtorm-7/sing-box-extended/releases?per_page=30' \
+            --jq '[.[] | select(.draft == false and .prerelease == false)][0].tag_name')"
+          [[ "$upstream_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-extended-[0-9]+(\.[0-9]+)*$ ]]
+
+          upstream_version="${upstream_tag#v}"
+          current_version="$(sed -n 's/^PKG_UPSTREAM_VERSION:=//p' "$makefile")"
+
+          changed=true
+
+          if [[ "$current_version" == "$upstream_version" ]]; then
+            changed=false
+            echo "sing-box 已是最新版：$upstream_version"
+          fi
+
+          {
+            echo "changed=$changed"
+            echo "tag=$upstream_tag"
+            echo "version=$upstream_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 下载并校验 sing-box 源码
+        if: steps.upstream.outputs.changed == 'true'
+        id: source
+        env:
+          UPSTREAM_TAG: ${{ steps.upstream.outputs.tag }}
+        run: |
+          archive="$RUNNER_TEMP/sing-box.tar.gz"
+
+          curl -fL --retry 3 \
+            "https://codeload.github.com/shtorm-7/sing-box-extended/tar.gz/$UPSTREAM_TAG" \
+            -o "$archive"
+
+          tar -tzf "$archive" >/dev/null
+
+          echo "hash=$(sha256sum "$archive" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: 更新 sing-box 软件包元数据
+        if: steps.upstream.outputs.changed == 'true'
+        env:
+          SOURCE_HASH: ${{ steps.source.outputs.hash }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          makefile='sing-box/Makefile'
+          if [[ "$UPSTREAM_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-extended-([0-9]+(\.[0-9]+)*)$ ]]; then
+            package_version="${BASH_REMATCH[1]}"
+            package_release="${BASH_REMATCH[2]//./}"
+          elif [[ "$UPSTREAM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            package_version="$UPSTREAM_VERSION"
+            package_release=1
+          else
+            printf '无法从版本号中提取纯数字版本：%s\n' "$UPSTREAM_VERSION" >&2
+            exit 1
+          fi
+
+          sed -i \
+            -e "s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=$UPSTREAM_VERSION/" \
+            -e "s/^PKG_VERSION:=.*/PKG_VERSION:=$package_version/" \
+            -e "s/^PKG_RELEASE:=.*/PKG_RELEASE:=$package_release/" \
+            -e "s/^PKG_HASH:=.*/PKG_HASH:=$SOURCE_HASH/" \
+            "$makefile"
+
+          grep -Fx "PKG_UPSTREAM_VERSION:=$UPSTREAM_VERSION" "$makefile"
+          grep -Fx "PKG_VERSION:=$package_version" "$makefile"
+          grep -Fx "PKG_RELEASE:=$package_release" "$makefile"
+          grep -Fx "PKG_HASH:=$SOURCE_HASH" "$makefile"
+
+          git diff --check
+
+      - name: 提交 sing-box 更新
+        if: steps.upstream.outputs.changed == 'true'
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          message="chore: 更新 sing-box 至 ${UPSTREAM_VERSION}"
+
+          local_head="$(git rev-parse HEAD)"
+          git fetch origin "$PACKAGE_BRANCH"
+          remote_head="$(git rev-parse "origin/$PACKAGE_BRANCH")"
+          if [[ "$local_head" != "$remote_head" ]]; then
+            printf '远端分支已更新，为避免提交冲突，本次任务停止：%s -> %s\n' \
+              "$local_head" "$remote_head" >&2
+            exit 75
+          fi
+
+          git add -- sing-box/Makefile
+          if git diff --cached --quiet; then
+            printf '没有需要提交的变更。\n'
+            exit 0
+          fi
+          git diff --cached --check
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "$message"
+          git push origin "HEAD:$PACKAGE_BRANCH"
