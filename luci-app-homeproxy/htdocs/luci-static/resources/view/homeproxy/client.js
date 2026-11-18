@@ -252,6 +252,10 @@ return view.extend({
 		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
 		o.value('9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
 		o.value('94.140.14.14', _('AdGuard Public DNS (94.140.14.14)'));
+		o.value('https://dns.google/dns-query', _('Google Public DNS (DoH)'));
+		o.value('https://cloudflare-dns.com/dns-query', _('CloudFlare Public DNS (DoH)'));
+		o.value('https://dns.quad9.net/dns-query', _('Quad9 Public DNS (DoH)'));
+		o.value('https://dns.adguard-dns.com/dns-query', _('AdGuard Public DNS (DoH)'));
 		o.default = '8.8.8.8';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
@@ -286,6 +290,10 @@ return view.extend({
 		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
 		o.value('117.50.10.10', _('ThreatBook Public DNS (117.50.10.10)'));
 		o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
+		o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DoH)'));
+		o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DoH)'));
+		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DoH)'));
+		o.value('https://doh-pure.onedns.net/dns-query', _('ThreatBook Public DNS (DoH)'));
 		o.depends('routing_mode', 'bypass_mainland_china');
 		o.default = '223.5.5.5';
 		o.rmempty = false;
@@ -316,6 +324,10 @@ return view.extend({
 
 		o = s.taboption('dns', form.DynamicList, 'dns_server_fallback', _('DNS server (fallback)'),
 			_('Additional DNS servers used together with the DNS server above. Support UDP, TCP, DoH, DoQ, DoT.'));
+		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
+		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
+		o.value('9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
+		o.value('94.140.14.14', _('AdGuard Public DNS (94.140.14.14)'));
 		o.value('https://dns.google/dns-query', _('Google Public DNS (DoH)'));
 		o.value('https://cloudflare-dns.com/dns-query', _('CloudFlare Public DNS (DoH)'));
 		o.value('https://dns.quad9.net/dns-query', _('Quad9 Public DNS (DoH)'));
@@ -326,6 +338,10 @@ return view.extend({
 		o = s.taboption('dns', form.DynamicList, 'china_dns_server_fallback', _('China DNS server (fallback)'),
 			_('Additional DNS servers used together with the China DNS server above. Support UDP, TCP, DoH, DoQ, DoT.'));
 		o.depends('routing_mode', 'bypass_mainland_china');
+		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
+		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
+		o.value('117.50.10.10', _('ThreatBook Public DNS (117.50.10.10)'));
+		o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
 		o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DoH)'));
 		o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DoH)'));
 		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DoH)'));
