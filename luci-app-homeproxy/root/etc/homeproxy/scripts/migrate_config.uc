@@ -42,6 +42,14 @@ for (let option in [ 'bypass_china_ip', 'reject_quic' ])
 if (isEmpty(uci.get(uciconfig, ucimain, 'tcpip_stack')))
 	uci.set(uciconfig, ucimain, 'tcpip_stack', isEmpty(legacy_tcpip_stack) ? 'system' : legacy_tcpip_stack);
 
+/* the common port preset was extended, migrate the old default in place */
+const legacy_common_port = '22,53,80,143,443,465,587,853,873,993,995,5222,8080,8443,9418';
+const common_port = uci.get(uciconfig, 'infra', 'common_port');
+
+if (isEmpty(common_port) || common_port === legacy_common_port)
+	uci.set(uciconfig, 'infra', 'common_port',
+		'20,21,22,25,53,80,110,119,123,143,389,443,465,514,563,587,636,853,873,989,990,993,995,1194,1883,3306,3389,5222,5432,5671,5672,5900,6379,6443,6514,8080,8443,8883,9418');
+
 /* the separate UDP node was removed, one node carries TCP and UDP */
 for (let option in [ 'main_udp_node', 'main_udp_urltest_nodes',
                      'main_udp_urltest_interval', 'main_udp_urltest_tolerance' ])
