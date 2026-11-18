@@ -3,7 +3,8 @@ name: HomeProxy 资源与面板更新
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'
+    # 每周日 02:00 UTC（北京时间周日 10:00）更新一次，原为每天
+    - cron: '0 2 * * 0'
 
 permissions:
   contents: write
