@@ -184,7 +184,7 @@ return view.extend({
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
 
 		/* Keep the last status so a re-render of the section does not show a blank bar */
-		let statusNode, statusHTML = '';
+		let statusNode, statusHTML = '', serviceRunning = false;
 
 		s = m.section(form.TypedSection);
 		s.render = function () {
@@ -201,6 +201,7 @@ return view.extend({
 				L.resolveDefault(getServiceStatus(), false),
 				L.resolveDefault(callCurrentNode(), {})
 			]).then((res) => {
+				serviceRunning = res[0];
 				statusHTML = renderStatus(res[0], features.version, res[1]);
 
 				if (statusNode)
@@ -589,6 +590,10 @@ return view.extend({
 		o.inputtitle = _('Open dashboard');
 		o.inputstyle = 'apply';
 		o.onclick = function() {
+			/* not running: spin the button for a moment instead of opening a dead page */
+			if (!serviceRunning)
+				return new Promise((resolve) => setTimeout(resolve, 400));
+
 			let host = window.location.hostname,
 			    port = uci.get('homeproxy', 'config', 'dashboard_port') || '9096';
 			if (host.includes(':') && !host.startsWith('['))
