@@ -806,8 +806,7 @@ if (!isEmpty(main_node)) {
 		push(config.dns.rules, {
 			rule_set: 'geosite-cn',
 			action: 'route',
-			server: 'china-dns',
-			strategy: 'prefer_ipv6'
+			server: 'china-dns'
 		});
 		push(config.dns.rules, {
 			type: 'logical',
@@ -822,8 +821,7 @@ if (!isEmpty(main_node)) {
 				}
 			],
 			action: 'route',
-			server: 'china-dns',
-			strategy: 'prefer_ipv6'
+			server: 'china-dns'
 		});
 	}
 }
@@ -1274,7 +1272,9 @@ if (!isEmpty(main_node)) {
 				tag,
 				format,
 				url,
-				download_detour: main_out_tag
+				http_client: {
+					detour: main_out_tag
+				}
 			});
 		};
 
@@ -1380,21 +1380,27 @@ if (!isEmpty(main_node)) {
 			tag: 'geoip-cn',
 			format: 'binary',
 			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs',
-			download_detour: main_out_tag
+			http_client: {
+				detour: main_out_tag
+			}
 		});
 		push(config.route.rule_set, {
 			type: 'remote',
 			tag: 'geosite-cn',
 			format: 'binary',
 			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs',
-			download_detour: main_out_tag
+			http_client: {
+				detour: main_out_tag
+			}
 		});
 		push(config.route.rule_set, {
 			type: 'remote',
 			tag: 'geosite-noncn',
 			format: 'binary',
 			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-!cn.srs',
-			download_detour: main_out_tag
+			http_client: {
+				detour: main_out_tag
+			}
 		});
 
 		/*
