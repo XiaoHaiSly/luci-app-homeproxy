@@ -3955,7 +3955,7 @@ msgstr "策略"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "How a node is picked for a new connection."
-msgstr "新连接如何挑选节点。"
+msgstr "新建连接的节点调度方式。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Round robin"
@@ -3983,7 +3983,7 @@ msgstr "延迟容差倍数"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow."
-msgstr "节点比最快节点慢多少时仍可被使用。留空或填 2 表示最快节点的两倍延迟以内。"
+msgstr "延迟不超过最快节点该倍数的节点均可参与调度。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Selection tolerance"
@@ -3991,7 +3991,7 @@ msgstr "切换容差"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "How much faster in milliseconds another node must be to take the selection."
-msgstr "其他节点要快多少毫秒才能接管当前选中的节点。"
+msgstr "延迟比当前节点低出该毫秒数以上的节点才会触发切换。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Selection tolerance ratio"
@@ -3999,7 +3999,7 @@ msgstr "切换容差比例"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "How much faster, as a share of the current delay, another node must be to take the selection."
-msgstr "其他节点要快出当前延迟的多少比例，才能接管当前选中的节点。"
+msgstr "延迟比当前节点低出该比例以上的节点才会触发切换。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "positive number"

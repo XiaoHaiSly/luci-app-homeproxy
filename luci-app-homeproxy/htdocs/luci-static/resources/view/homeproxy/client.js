@@ -78,7 +78,7 @@ function getServiceStatus() {
 	return L.resolveDefault(callServiceList('homeproxy'), {}).then((res) => {
 		let isRunning = false;
 		try {
-			isRunning = res['homeproxy']['instances']['sing-box-c']['running'];
+			isRunning = res['homeproxy']['instances']['hiddify-core-c']['running'];
 		} catch (e) { }
 		return isRunning;
 	});
@@ -353,8 +353,8 @@ return view.extend({
 		o.value('wan', _('WAN DNS (read from interface)'));
 		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
 		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
-		o.value('117.50.10.10', _('ThreatBook Public DNS (117.50.10.10)'));
 		o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
+		o.value('117.50.10.10', _('ThreatBook Public DNS (117.50.10.10)'));
 		o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DoH)'));
 		o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DoH)'));
 		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DoH)'));

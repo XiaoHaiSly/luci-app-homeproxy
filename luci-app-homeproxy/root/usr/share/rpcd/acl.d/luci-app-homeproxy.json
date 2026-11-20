@@ -5,8 +5,8 @@
 			"file": {
 				"/etc/homeproxy/scripts/update_subscriptions.uc": [ "exec" ],
 				"/var/run/homeproxy/homeproxy.log": [ "read" ],
-				"/var/run/homeproxy/sing-box-c.log": [ "read" ],
-				"/var/run/homeproxy/sing-box-s.log": [ "read" ]
+				"/var/run/homeproxy/hiddify-core-c.log": [ "read" ],
+				"/var/run/homeproxy/hiddify-core-s.log": [ "read" ]
 			},
 			"ubus": {
 				"service": [ "list" ],

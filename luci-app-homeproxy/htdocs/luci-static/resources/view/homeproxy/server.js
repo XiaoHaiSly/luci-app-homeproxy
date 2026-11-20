@@ -45,7 +45,7 @@ function getServiceStatus() {
 	return L.resolveDefault(callServiceList('homeproxy'), {}).then((res) => {
 		let isRunning = false;
 		try {
-			isRunning = res['homeproxy']['instances']['sing-box-s']['running'];
+			isRunning = res['homeproxy']['instances']['hiddify-core-s']['running'];
 		} catch (e) { }
 		return isRunning;
 	});
@@ -69,15 +69,15 @@ function handleGenKey(option) {
 		return this.map.findElement('id', 'widget.' + this.cbid(section_id).replace(/\.[^\.]+$/, '.') + option);
 	}, this);
 
-	const callSingBoxGenerator = rpc.declare({
+	const callCoreGenerator = rpc.declare({
 		object: 'luci.homeproxy',
-		method: 'singbox_generator',
+		method: 'core_generator',
 		params: ['type', 'params'],
 		expect: { '': {} }
 	});
 
 	if (typeof option === 'object') {
-		return callSingBoxGenerator(option.type, option.params).then((res) => {
+		return callCoreGenerator(option.type, option.params).then((res) => {
 			if (res.result)
 				option.callback.call(this, res.result).forEach(([k, v]) => {
 					widget(k).value = v ?? '';

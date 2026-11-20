@@ -19,7 +19,7 @@ import {
 
 const ubus = connect();
 
-/* const features = ubus.call('luci.homeproxy', 'singbox_get_features') || {}; */
+/* const features = ubus.call('luci.homeproxy', 'core_get_features') || {}; */
 
 /* UCI config start */
 const uci = cursor();
@@ -717,7 +717,7 @@ function outbound_tag_defined(tag) {
 config.log = {
 	disabled: false,
 	level: log_level,
-	output: RUN_DIR + '/sing-box-c.log',
+	output: RUN_DIR + '/hiddify-core-c.log',
 	timestamp: true
 };
 
@@ -1631,4 +1631,4 @@ if (api_console_enabled)
 /* API service end */
 
 system('mkdir -p ' + RUN_DIR);
-writefile(RUN_DIR + '/sing-box-c.json', sprintf('%.J\n', removeBlankAttrs(config)));
+writefile(RUN_DIR + '/hiddify-core-c.json', sprintf('%.J\n', removeBlankAttrs(config)));

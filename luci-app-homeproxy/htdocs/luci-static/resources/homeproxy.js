@@ -236,13 +236,13 @@ return baseclass.extend({
 	},
 
 	getBuiltinFeatures() {
-		const callGetSingBoxFeatures = rpc.declare({
+		const callGetCoreFeatures = rpc.declare({
 			object: 'luci.homeproxy',
-			method: 'singbox_get_features',
+			method: 'core_get_features',
 			expect: { '': {} }
 		});
 
-		return L.resolveDefault(callGetSingBoxFeatures(), {});
+		return L.resolveDefault(callGetCoreFeatures(), {});
 	},
 
 	generateRand(type, length) {

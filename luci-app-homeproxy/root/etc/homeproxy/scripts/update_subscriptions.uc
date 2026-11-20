@@ -62,7 +62,7 @@ const node_cache = {},
       node_result = [];
 
 const ubus = connect();
-const sing_features = ubus.call('luci.homeproxy', 'singbox_get_features', {}) || {};
+const core_features = ubus.call('luci.homeproxy', 'core_get_features', {}) || {};
 /* Common var end */
 
 /* Log */
@@ -148,9 +148,9 @@ function parse_uri(uri) {
 			url = parseURL('http://' + uri[1]) || {};
 			params = url.searchParams || {};
 
-			if (!sing_features.with_quic || (params.protocol && params.protocol !== 'udp')) {
+			if (!core_features.with_quic || (params.protocol && params.protocol !== 'udp')) {
 				log(sprintf('Skipping unsupported %s node: %s.', uri[0], urldecode(url.hash) || url.hostname));
-				if (!sing_features.with_quic)
+				if (!core_features.with_quic)
 					log(sprintf('Please rebuild hiddify-core with %s support!', 'QUIC'));
 
 				return null;
@@ -180,7 +180,7 @@ function parse_uri(uri) {
 			url = parseURL('http://' + uri[1]) || {};
 			params = url.searchParams || {};
 
-			if (!sing_features.with_quic) {
+			if (!core_features.with_quic) {
 				log(sprintf('Skipping unsupported %s node: %s.', uri[0], urldecode(url.hash) || url.hostname));
 				log(sprintf('Please rebuild hiddify-core with %s support!', 'QUIC'));
 				return null;
@@ -303,7 +303,7 @@ function parse_uri(uri) {
 			url = parseURL('http://' + uri[1]) || {};
 			params = url.searchParams || {};
 
-			if (!sing_features.with_quic) {
+			if (!core_features.with_quic) {
 				log(sprintf('Skipping unsupported %s node: %s.', uri[0], urldecode(url.hash) || url.hostname));
 				log(sprintf('Please rebuild hiddify-core with %s support!', 'QUIC'));
 
@@ -334,9 +334,9 @@ function parse_uri(uri) {
 			if (params.type === 'kcp') {
 				log(sprintf('Skipping sunsupported %s node: %s.', uri[0], urldecode(url.hash) || url.hostname));
 				return null;
-			} else if (params.type === 'quic' && ((params.quicSecurity && params.quicSecurity !== 'none') || !sing_features.with_quic)) {
+			} else if (params.type === 'quic' && ((params.quicSecurity && params.quicSecurity !== 'none') || !core_features.with_quic)) {
 				log(sprintf('Skipping sunsupported %s node: %s.', uri[0], urldecode(url.hash) || url.hostname));
-				if (!sing_features.with_quic)
+				if (!core_features.with_quic)
 					log(sprintf('Please rebuild hiddify-core with %s support!', 'QUIC'));
 
 				return null;
@@ -355,7 +355,7 @@ function parse_uri(uri) {
 				tls_reality: (params.security === 'reality') ? '1' : '0',
 				tls_reality_public_key: params.pbk ? urldecode(params.pbk) : null,
 				tls_reality_short_id: params.sid,
-				tls_utls: sing_features.with_utls ? params.fp : null,
+				tls_utls: core_features.with_utls ? params.fp : null,
 				vless_flow: (params.security in ['tls', 'reality']) ? params.flow : null,
 				vless_encryption: params.encryption || null
 			};
@@ -505,9 +505,9 @@ function parse_uri(uri) {
 			} else if (uri.net === 'kcp') {
 				log(sprintf('Skipping unsupported %s node: %s.', uri[0], uri.ps || uri.add));
 				return null;
-			} else if (uri.net === 'quic' && ((uri.type && uri.type !== 'none') || uri.path || !sing_features.with_quic)) {
+			} else if (uri.net === 'quic' && ((uri.type && uri.type !== 'none') || uri.path || !core_features.with_quic)) {
 				log(sprintf('Skipping unsupported %s node: %s.', uri[0], uri.ps || uri.add));
-				if (!sing_features.with_quic)
+				if (!core_features.with_quic)
 					log(sprintf('Please rebuild hiddify-core with %s support!', 'QUIC'));
 
 				return null;
@@ -533,7 +533,7 @@ function parse_uri(uri) {
 				tls: (uri.tls === 'tls') ? '1' : '0',
 				tls_sni: uri.sni || uri.host,
 				tls_alpn: uri.alpn ? split(uri.alpn, ',') : null,
-				tls_utls: sing_features.with_utls ? uri.fp : null
+				tls_utls: core_features.with_utls ? uri.fp : null
 			};
 			switch (uri.net) {
 			case 'grpc':

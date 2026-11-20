@@ -32,7 +32,7 @@ const config = {};
 config.log = {
 	disabled: false,
 	level: log_level,
-	output: RUN_DIR + '/sing-box-s.log',
+	output: RUN_DIR + '/hiddify-core-s.log',
 	timestamp: true
 };
 
@@ -211,4 +211,4 @@ if (length(config.inbounds) === 0)
 	exit(1);
 
 system('mkdir -p ' + RUN_DIR);
-writefile(RUN_DIR + '/sing-box-s.json', sprintf('%.J\n', removeBlankAttrs(config)));
+writefile(RUN_DIR + '/hiddify-core-s.json', sprintf('%.J\n', removeBlankAttrs(config)));

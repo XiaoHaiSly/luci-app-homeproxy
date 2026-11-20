@@ -345,7 +345,7 @@ const methods = {
 	log_clean: {
 		args: { type: 'type' },
 		call: function(req) {
-			if (!(req.args?.type in ['homeproxy', 'sing-box-c', 'sing-box-s']))
+			if (!(req.args?.type in ['homeproxy', 'hiddify-core-c', 'hiddify-core-s']))
 				return { result: false, error: 'illegal type' };
 
 			const filestat = lstat(`${RUN_DIR}/${req.args?.type}.log`);
@@ -355,7 +355,7 @@ const methods = {
 		}
 	},
 
-	singbox_generator: {
+	core_generator: {
 		args: { type: 'type', params: 'params' },
 		call: function(req) {
 			if (!(req.args?.type in ['ech-keypair', 'uuid', 'reality-keypair', 'vapid-keypair', 'wg-keypair']))
@@ -528,7 +528,7 @@ const methods = {
 		}
 	},
 
-	singbox_get_features: {
+	core_get_features: {
 		call: function() {
 			let features = {};
 
