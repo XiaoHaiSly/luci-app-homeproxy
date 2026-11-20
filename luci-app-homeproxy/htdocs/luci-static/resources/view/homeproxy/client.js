@@ -215,17 +215,6 @@ return view.extend({
 		s.tab('routing', _('Routing Settings'));
 		s.tab('dns', _('DNS Settings'));
 
-		/* optional positive number, the core keeps its own default when empty */
-		const validatePositiveNumber = function(section_id, value) {
-			if (!value)
-				return true;
-
-			if (isNaN(value) || Number(value) <= 0)
-				return _('Expecting: %s').format(_('positive number'));
-
-			return true;
-		};
-
 		o = s.taboption('routing', form.ListValue, 'main_node', _('Main node'));
 		o.value('nil', _('Disable'));
 		o.value('urltest', _('URLTest'));
@@ -306,28 +295,6 @@ return view.extend({
 		o.default = 'round-robin';
 		o.depends('main_node', 'balancer');
 		o.retain = true;
-
-		o = s.taboption('routing', form.Value, 'main_balancer_delay_acceptable_ratio',
-			_('Delay tolerance ratio'),
-			_('How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow.'));
-		o.placeholder = '2';
-		o.depends('main_node', 'balancer');
-		o.retain = true;
-		o.validate = validatePositiveNumber;
-
-		o = s.taboption('routing', form.Value, 'main_balancer_tolerance', _('Selection tolerance'),
-			_('How much faster in milliseconds another node must be to take the selection.'));
-		o.datatype = 'uinteger';
-		o.placeholder = '50';
-		o.depends('main_node', 'balancer');
-		o.retain = true;
-
-		o = s.taboption('routing', form.Value, 'main_balancer_tolerance_ratio', _('Selection tolerance ratio'),
-			_('How much faster, as a share of the current delay, another node must be to take the selection.'));
-		o.placeholder = '0.1';
-		o.depends('main_node', 'balancer');
-		o.retain = true;
-		o.validate = validatePositiveNumber;
 
 		o = s.taboption('routing', form.Flag, 'main_balancer_interrupt_exist_connections', _('Interrupt existing connections'));
 		o.default = o.disabled;
@@ -627,30 +594,6 @@ return view.extend({
 		so.depends('node', 'balancer');
 		so.modalonly = true;
 		so.retain = true;
-
-		so = ss.option(form.Value, 'balancer_delay_acceptable_ratio', _('Delay tolerance ratio'),
-			_('How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow.'));
-		so.placeholder = '2';
-		so.depends('node', 'balancer');
-		so.modalonly = true;
-		so.retain = true;
-		so.validate = validatePositiveNumber;
-
-		so = ss.option(form.Value, 'balancer_tolerance', _('Selection tolerance'),
-			_('How much faster in milliseconds another node must be to take the selection.'));
-		so.datatype = 'uinteger';
-		so.placeholder = '50';
-		so.depends('node', 'balancer');
-		so.modalonly = true;
-		so.retain = true;
-
-		so = ss.option(form.Value, 'balancer_tolerance_ratio', _('Selection tolerance ratio'),
-			_('How much faster, as a share of the current delay, another node must be to take the selection.'));
-		so.placeholder = '0.1';
-		so.depends('node', 'balancer');
-		so.modalonly = true;
-		so.retain = true;
-		so.validate = validatePositiveNumber;
 
 		so = ss.option(form.Flag, 'balancer_interrupt_exist_connections', _('Interrupt existing connections'));
 		so.default = so.disabled;

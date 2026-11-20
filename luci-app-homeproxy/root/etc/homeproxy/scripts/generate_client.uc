@@ -1045,9 +1045,6 @@ if (!isEmpty(main_node)) {
 			tag: 'main-out',
 			outbounds: map(main_balancer_nodes, (k) => node_out_tag(k)),
 			strategy: uci.get(uciconfig, ucimain, 'main_balancer_strategy') || 'round-robin',
-			delay_acceptable_ratio: strToFloat(uci.get(uciconfig, ucimain, 'main_balancer_delay_acceptable_ratio')),
-			tolerance: strToInt(uci.get(uciconfig, ucimain, 'main_balancer_tolerance')),
-			tolerance_ratio: strToFloat(uci.get(uciconfig, ucimain, 'main_balancer_tolerance_ratio')),
 			interrupt_exist_connections: strToBool(uci.get(uciconfig, ucimain, 'main_balancer_interrupt_exist_connections'))
 		});
 		group_nodes = main_balancer_nodes;
@@ -1229,9 +1226,6 @@ function app_rule_outbound(cfg) {
 				tag,
 				outbounds: map(nodes, (k) => node_out_tag(k)),
 				strategy: cfg.balancer_strategy || 'round-robin',
-				delay_acceptable_ratio: strToFloat(cfg.balancer_delay_acceptable_ratio),
-				tolerance: strToInt(cfg.balancer_tolerance),
-				tolerance_ratio: strToFloat(cfg.balancer_tolerance_ratio),
 				interrupt_exist_connections: strToBool(cfg.balancer_interrupt_exist_connections)
 			});
 		}
