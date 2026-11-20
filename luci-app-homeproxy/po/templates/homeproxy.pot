@@ -3255,3 +3255,75 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:610
 msgid "How long a node that failed to connect is skipped, in seconds."
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Balancer"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Separate Balancer"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Balancer nodes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Connections are spread over the nodes by the selected strategy."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Strategy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How a node is picked for a new connection."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Round robin"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Lowest delay"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Consistent hashing"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Sticky sessions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Pool"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Delay tolerance ratio"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Selection tolerance"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much faster in milliseconds another node must be to take the selection."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Selection tolerance ratio"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much faster, as a share of the current delay, another node must be to take the selection."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "positive number"
+msgstr ""

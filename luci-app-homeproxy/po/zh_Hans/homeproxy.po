@@ -3948,3 +3948,75 @@ msgstr "黑名单超时"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:610
 msgid "How long a node that failed to connect is skipped, in seconds."
 msgstr "连接失败的节点会被跳过多久，单位为秒。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Balancer"
+msgstr "负载均衡"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Separate Balancer"
+msgstr "独立负载均衡"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Balancer nodes"
+msgstr "负载均衡节点"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Connections are spread over the nodes by the selected strategy."
+msgstr "按所选策略把连接分散到各个节点。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Strategy"
+msgstr "策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How a node is picked for a new connection."
+msgstr "新连接如何挑选节点。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Round robin"
+msgstr "轮询"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Lowest delay"
+msgstr "最低延迟"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Consistent hashing"
+msgstr "一致性哈希"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Sticky sessions"
+msgstr "会话保持"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Pool"
+msgstr "固定槽位"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Delay tolerance ratio"
+msgstr "延迟容差倍数"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow."
+msgstr "节点比最快节点慢多少时仍可被使用。留空或填 2 表示最快节点的两倍延迟以内。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Selection tolerance"
+msgstr "切换容差"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much faster in milliseconds another node must be to take the selection."
+msgstr "其他节点要快多少毫秒才能接管当前选中的节点。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Selection tolerance ratio"
+msgstr "切换容差比例"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How much faster, as a share of the current delay, another node must be to take the selection."
+msgstr "其他节点要快出当前延迟的多少比例，才能接管当前选中的节点。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "positive number"
+msgstr "正数"

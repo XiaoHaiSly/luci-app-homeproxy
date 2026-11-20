@@ -214,10 +214,22 @@ return view.extend({
 		s.tab('routing', _('Routing Settings'));
 		s.tab('dns', _('DNS Settings'));
 
+		/* optional positive number, the core keeps its own default when empty */
+		const validatePositiveNumber = function(section_id, value) {
+			if (!value)
+				return true;
+
+			if (isNaN(value) || Number(value) <= 0)
+				return _('Expecting: %s').format(_('positive number'));
+
+			return true;
+		};
+
 		o = s.taboption('routing', form.ListValue, 'main_node', _('Main node'));
 		o.value('nil', _('Disable'));
 		o.value('urltest', _('URLTest'));
 		o.value('fallback', _('Fallback'));
+		o.value('balancer', _('Balancer'));
 		for (let i in proxy_nodes)
 			o.value(i, proxy_nodes[i]);
 		o.default = 'nil';
@@ -272,6 +284,53 @@ return view.extend({
 		o.datatype = 'uinteger';
 		o.placeholder = '60';
 		o.depends('main_node', 'fallback');
+		o.retain = true;
+
+		o = s.taboption('routing', hp.CBIStaticList, 'main_balancer_nodes', _('Balancer nodes'),
+			_('Connections are spread over the nodes by the selected strategy.'));
+		for (let i in proxy_nodes)
+			o.value(i, proxy_nodes[i]);
+		o.depends('main_node', 'balancer');
+		o.rmempty = false;
+		/* keep the selection when another main node is used */
+		o.retain = true;
+
+		o = s.taboption('routing', form.ListValue, 'main_balancer_strategy', _('Strategy'),
+			_('How a node is picked for a new connection.'));
+		o.value('round-robin', _('Round robin'));
+		o.value('lowest-delay', _('Lowest delay'));
+		o.value('consistent-hashing', _('Consistent hashing'));
+		o.value('sticky-sessions', _('Sticky sessions'));
+		o.value('pool', _('Pool'));
+		o.default = 'round-robin';
+		o.depends('main_node', 'balancer');
+		o.retain = true;
+
+		o = s.taboption('routing', form.Value, 'main_balancer_delay_acceptable_ratio',
+			_('Delay tolerance ratio'),
+			_('How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow.'));
+		o.placeholder = '2';
+		o.depends('main_node', 'balancer');
+		o.retain = true;
+		o.validate = validatePositiveNumber;
+
+		o = s.taboption('routing', form.Value, 'main_balancer_tolerance', _('Selection tolerance'),
+			_('How much faster in milliseconds another node must be to take the selection.'));
+		o.datatype = 'uinteger';
+		o.placeholder = '50';
+		o.depends('main_node', 'balancer');
+		o.retain = true;
+
+		o = s.taboption('routing', form.Value, 'main_balancer_tolerance_ratio', _('Selection tolerance ratio'),
+			_('How much faster, as a share of the current delay, another node must be to take the selection.'));
+		o.placeholder = '0.1';
+		o.depends('main_node', 'balancer');
+		o.retain = true;
+		o.validate = validatePositiveNumber;
+
+		o = s.taboption('routing', form.Flag, 'main_balancer_interrupt_exist_connections', _('Interrupt existing connections'));
+		o.default = o.disabled;
+		o.depends('main_node', 'balancer');
 		o.retain = true;
 
 		o = s.taboption('dns', form.Value, 'dns_server', _('DNS server'),
@@ -549,6 +608,7 @@ return view.extend({
 		so.value('main-out', _('Same as main node'));
 		so.value('urltest', _('Separate URLTest'));
 		so.value('fallback', _('Separate Fallback'));
+		so.value('balancer', _('Separate Balancer'));
 		so.value('direct-out', _('Direct'));
 		so.value('reject-out', _('Reject'));
 		so.value('tailscale', _('[Tailscale] Tailscale'));
@@ -611,6 +671,57 @@ return view.extend({
 		so.datatype = 'uinteger';
 		so.placeholder = '60';
 		so.depends('node', 'fallback');
+		so.modalonly = true;
+		so.retain = true;
+
+		so = ss.option(hp.CBIStaticList, 'balancer_nodes', _('Balancer nodes'),
+			_('Connections are spread over the nodes by the selected strategy.'));
+		for (let i in proxy_nodes)
+			so.value(i, proxy_nodes[i]);
+		so.depends('node', 'balancer');
+		so.rmempty = false;
+		so.modalonly = true;
+		so.retain = true;
+
+		so = ss.option(form.ListValue, 'balancer_strategy', _('Strategy'),
+			_('How a node is picked for a new connection.'));
+		so.value('round-robin', _('Round robin'));
+		so.value('lowest-delay', _('Lowest delay'));
+		so.value('consistent-hashing', _('Consistent hashing'));
+		so.value('sticky-sessions', _('Sticky sessions'));
+		so.value('pool', _('Pool'));
+		so.default = 'round-robin';
+		so.depends('node', 'balancer');
+		so.modalonly = true;
+		so.retain = true;
+
+		so = ss.option(form.Value, 'balancer_delay_acceptable_ratio', _('Delay tolerance ratio'),
+			_('How much slower than the fastest node a node may be and still be used. Empty or 2 means up to twice as slow.'));
+		so.placeholder = '2';
+		so.depends('node', 'balancer');
+		so.modalonly = true;
+		so.retain = true;
+		so.validate = validatePositiveNumber;
+
+		so = ss.option(form.Value, 'balancer_tolerance', _('Selection tolerance'),
+			_('How much faster in milliseconds another node must be to take the selection.'));
+		so.datatype = 'uinteger';
+		so.placeholder = '50';
+		so.depends('node', 'balancer');
+		so.modalonly = true;
+		so.retain = true;
+
+		so = ss.option(form.Value, 'balancer_tolerance_ratio', _('Selection tolerance ratio'),
+			_('How much faster, as a share of the current delay, another node must be to take the selection.'));
+		so.placeholder = '0.1';
+		so.depends('node', 'balancer');
+		so.modalonly = true;
+		so.retain = true;
+		so.validate = validatePositiveNumber;
+
+		so = ss.option(form.Flag, 'balancer_interrupt_exist_connections', _('Interrupt existing connections'));
+		so.default = so.disabled;
+		so.depends('node', 'balancer');
 		so.modalonly = true;
 		so.retain = true;
 		/* Application routing end */

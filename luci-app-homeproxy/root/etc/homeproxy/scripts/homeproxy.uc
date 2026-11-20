@@ -166,25 +166,28 @@ export function reconcileUrltestNodes(uci, config, logger) {
 
 	const mainNodes = reconcileList('config', 'main_urltest_nodes');
 	const mainFallbackNodes = reconcileList('config', 'main_fallback_nodes');
+	const mainBalancerNodes = reconcileList('config', 'main_balancer_nodes');
 
 	/* application routing rules */
 	uci.foreach(config, 'app_rule', (section) => {
 		const available = reconcileList(section['.name'], 'urltest_nodes');
 		const fallbackAvailable = reconcileList(section['.name'], 'fallback_nodes');
+		const balancerAvailable = reconcileList(section['.name'], 'balancer_nodes');
 		const node = section.node;
 		const label = trim(section.custom_service_name || '') || section.source || section['.name'];
 
 		/* An empty group would silently use the main node at runtime,
 		   reflect that in the configuration as well */
 		if ((node === 'urltest' && !length(available)) ||
-		    (node === 'fallback' && !length(fallbackAvailable))) {
+		    (node === 'fallback' && !length(fallbackAvailable)) ||
+		    (node === 'balancer' && !length(balancerAvailable))) {
 			uci.set(config, section['.name'], 'node', 'main-out');
 			changed = true;
 			log(sprintf('Routing rule "%s" has no node left; falling back to the main node.', label));
 			return;
 		}
 
-		if (isEmpty(node) || node in ['main-out', 'urltest', 'fallback', 'direct-out', 'reject-out', 'tailscale'])
+		if (isEmpty(node) || node in ['main-out', 'urltest', 'fallback', 'balancer', 'direct-out', 'reject-out', 'tailscale'])
 			return;
 
 		if (!nodeExists(node)) {
@@ -197,7 +200,8 @@ export function reconcileUrltestNodes(uci, config, logger) {
 	const mainNode = uci.get(config, 'config', 'main_node');
 
 	const mainGroupEmpty = (mainNode === 'urltest' && !length(mainNodes)) ||
-		(mainNode === 'fallback' && !length(mainFallbackNodes));
+		(mainNode === 'fallback' && !length(mainFallbackNodes)) ||
+		(mainNode === 'balancer' && !length(mainBalancerNodes));
 
 	if (mainGroupEmpty) {
 		const fallback = uci.get_first(config, 'node') || 'nil';
@@ -207,7 +211,7 @@ export function reconcileUrltestNodes(uci, config, logger) {
 			'Main group is empty; disabling the client.' :
 			sprintf('Main group is empty; switching to node %s.', fallback));
 	} else if (!isEmpty(mainNode) && mainNode !== 'nil' && mainNode !== 'urltest' &&
-	           mainNode !== 'fallback' && !nodeExists(mainNode)) {
+	           mainNode !== 'fallback' && mainNode !== 'balancer' && !nodeExists(mainNode)) {
 		const fallback = uci.get_first(config, 'node') || 'nil';
 		uci.set(config, 'config', 'main_node', fallback);
 		changed = true;

@@ -45,15 +45,17 @@ return baseclass.extend({
 
 		const mainNodes = reconcileList('config', 'main_urltest_nodes');
 		const mainFallbackNodes = reconcileList('config', 'main_fallback_nodes');
+		const mainBalancerNodes = reconcileList('config', 'main_balancer_nodes');
 		const mainNode = uci.get(uciconfig, 'config', 'main_node');
 
 		if ((mainNode === 'urltest' && !mainNodes.length) ||
-		    (mainNode === 'fallback' && !mainFallbackNodes.length)) {
+		    (mainNode === 'fallback' && !mainFallbackNodes.length) ||
+		    (mainNode === 'balancer' && !mainBalancerNodes.length)) {
 			uci.set(uciconfig, 'config', 'main_node', firstNode || 'nil');
 			changed = true;
 		}
 		else if (mainNode && mainNode !== 'nil' && mainNode !== 'urltest' &&
-		         mainNode !== 'fallback' && !available[mainNode]) {
+		         mainNode !== 'fallback' && mainNode !== 'balancer' && !available[mainNode]) {
 			uci.set(uciconfig, 'config', 'main_node', firstNode || 'nil');
 			changed = true;
 		}
@@ -61,8 +63,8 @@ return baseclass.extend({
 		uci.sections(uciconfig, 'app_rule', (cfg) => {
 			const node = cfg.node || 'main-out';
 
-			if (node === 'urltest' || node === 'fallback') {
-				const nodes = reconcileList(cfg['.name'], node === 'urltest' ? 'urltest_nodes' : 'fallback_nodes');
+			if (node === 'urltest' || node === 'fallback' || node === 'balancer') {
+				const nodes = reconcileList(cfg['.name'], node + '_nodes');
 
 				if (!nodes.length) {
 					uci.set(uciconfig, cfg['.name'], 'node', 'main-out');
@@ -362,7 +364,8 @@ return baseclass.extend({
 		if (section_id) {
 			if (!value)
 				return _('Expecting: %s').format(_('non-empty value'));
-			if (ucioption === 'node' && (value === 'urltest' || value === 'fallback'))
+			if (ucioption === 'node' && (value === 'urltest' || value === 'fallback' ||
+			                             value === 'balancer'))
 				return true;
 
 			let duplicate = false;

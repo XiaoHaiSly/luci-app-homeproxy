@@ -101,7 +101,7 @@ main_node = uci.get(uciconfig, ucimain, 'main_node') || 'nil';
 
 /* a stale reference (deleted node) must not break the configuration */
 if (!isEmpty(main_node) && main_node !== 'urltest' && main_node !== 'fallback' &&
-    type(uci.get_all(uciconfig, main_node)) !== 'object')
+    main_node !== 'balancer' && type(uci.get_all(uciconfig, main_node)) !== 'object')
 	main_node = 'nil';
 
 const main_urltest_nodes = normalizeList(uci.get(uciconfig, ucimain, 'main_urltest_nodes'));
@@ -113,6 +113,11 @@ if (main_node === 'urltest' && !length(main_urltest_nodes))
 const main_fallback_nodes = normalizeList(uci.get(uciconfig, ucimain, 'main_fallback_nodes'));
 
 if (main_node === 'fallback' && !length(main_fallback_nodes))
+	main_node = 'nil';
+
+const main_balancer_nodes = normalizeList(uci.get(uciconfig, ucimain, 'main_balancer_nodes'));
+
+if (main_node === 'balancer' && !length(main_balancer_nodes))
 	main_node = 'nil';
 
 dns_server = uci.get(uciconfig, ucimain, 'dns_server');
@@ -229,10 +234,23 @@ function node_out_tag(id) {
  * The main outbound keeps the well-known tag for the groups, a single main
  * node is referenced by its label based tag.
  */
-let main_out_tag = (isEmpty(main_node) || main_node === 'urltest' || main_node === 'fallback') ?
-	'main-out' : node_out_tag(main_node);
+let main_out_tag = (isEmpty(main_node) || main_node === 'urltest' || main_node === 'fallback' ||
+	main_node === 'balancer') ? 'main-out' : node_out_tag(main_node);
 
 /* Config helper start */
+/*
+ * A positive number that may hold a fraction. Empty or invalid is dropped so
+ * that the default of the core applies instead of an invalid value.
+ */
+function strToFloat(str) {
+	if (isEmpty(str))
+		return null;
+
+	const val = +str;
+
+	return (isnan(val) || val <= 0) ? null : val;
+}
+
 function parse_port(strport) {
 	if (type(strport) !== 'array' || isEmpty(strport))
 		return null;
@@ -936,6 +954,22 @@ if (!isEmpty(main_node)) {
 			blacklist_timeout: strToTime(uci.get(uciconfig, ucimain, 'main_fallback_blacklist_timeout'))
 		});
 		group_nodes = main_fallback_nodes;
+	} else if (main_node === 'balancer') {
+		/*
+		 * The members and their delays come from the background monitoring, the
+		 * group keeps no test schedule of its own.
+		 */
+		push(config.outbounds, {
+			type: 'balancer',
+			tag: 'main-out',
+			outbounds: map(main_balancer_nodes, (k) => node_out_tag(k)),
+			strategy: uci.get(uciconfig, ucimain, 'main_balancer_strategy') || 'round-robin',
+			delay_acceptable_ratio: strToFloat(uci.get(uciconfig, ucimain, 'main_balancer_delay_acceptable_ratio')),
+			tolerance: strToInt(uci.get(uciconfig, ucimain, 'main_balancer_tolerance')),
+			tolerance_ratio: strToFloat(uci.get(uciconfig, ucimain, 'main_balancer_tolerance_ratio')),
+			interrupt_exist_connections: strToBool(uci.get(uciconfig, ucimain, 'main_balancer_interrupt_exist_connections'))
+		});
+		group_nodes = main_balancer_nodes;
 	} else {
 		const main_node_cfg = uci.get_all(uciconfig, main_node) || {};
 		if (main_node_cfg.type === 'wireguard') {
@@ -1092,6 +1126,32 @@ function app_rule_outbound(cfg) {
 				tag,
 				outbounds: map(nodes, (k) => node_out_tag(k)),
 				blacklist_timeout: strToTime(cfg.fallback_blacklist_timeout)
+			});
+		}
+
+		for (let id in nodes)
+			add_node_outbound(id);
+
+		return tag;
+	}
+	case 'balancer': {
+		const nodes = valid_node_list(cfg.balancer_nodes);
+
+		if (!length(nodes))
+			return main_out_tag;
+
+		const tag = 'app-' + app_rule_label(cfg) + '-out';
+
+		if (!outbound_tag_defined(tag)) {
+			push(config.outbounds, {
+				type: 'balancer',
+				tag,
+				outbounds: map(nodes, (k) => node_out_tag(k)),
+				strategy: cfg.balancer_strategy || 'round-robin',
+				delay_acceptable_ratio: strToFloat(cfg.balancer_delay_acceptable_ratio),
+				tolerance: strToInt(cfg.balancer_tolerance),
+				tolerance_ratio: strToFloat(cfg.balancer_tolerance_ratio),
+				interrupt_exist_connections: strToBool(cfg.balancer_interrupt_exist_connections)
 			});
 		}
 
@@ -1442,7 +1502,7 @@ config.experimental.clash_api = {
 /* API service: serves the dashboard and answers the API queries, the Tailscale
    login state is queried through it as well */
 const api_console_enabled = dashboard_enabled || main_node === 'urltest' ||
-	main_node === 'fallback' || tailscale_enabled;
+	main_node === 'fallback' || main_node === 'balancer' || tailscale_enabled;
 
 if (api_console_enabled)
 	config.services = [

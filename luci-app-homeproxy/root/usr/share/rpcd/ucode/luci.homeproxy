@@ -473,7 +473,7 @@ const methods = {
 
 			const tags = nodeTagMap(uci);
 
-			if (main_node !== 'urltest' && main_node !== 'fallback')
+			if (main_node !== 'urltest' && main_node !== 'fallback' && main_node !== 'balancer')
 				return {
 					mode: 'node',
 					active: nodeInfo(main_node),
