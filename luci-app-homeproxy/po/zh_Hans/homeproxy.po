@@ -1559,7 +1559,7 @@ msgstr "崩溃"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:288
 msgid "Parallel (query all at once)"
-msgstr "并行（同时查询）"
+msgstr "并行"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:562
 #: htdocs/luci-static/resources/view/homeproxy/server.js:210
@@ -1881,7 +1881,7 @@ msgstr "序号放置方式"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:287
 msgid "Sequential (try in order)"
-msgstr "顺序（依次尝试）"
+msgstr "顺序"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:156
 msgid "Server"
@@ -3889,11 +3889,11 @@ msgstr "TLS 记录分片"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:357
 msgid "Fastest (re-test periodically)"
-msgstr "最快（定期重新测速）"
+msgstr "最快"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:358
 msgid "Stable (keep the working server)"
-msgstr "稳定（保持可用服务器）"
+msgstr "稳定"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:250
 #: htdocs/luci-static/resources/view/homeproxy/client.js:593
