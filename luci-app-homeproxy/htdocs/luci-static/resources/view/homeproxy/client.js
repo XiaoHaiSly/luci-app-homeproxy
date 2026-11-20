@@ -287,7 +287,7 @@ return view.extend({
 
 		o = s.taboption('routing', form.ListValue, 'main_balancer_strategy', _('Strategy'),
 			_('How a node is picked for a new connection.'));
-		o.value('round-robin', _('Round robin'));
+		o.value('round-robin', _('Round-robin'));
 		o.value('lowest-delay', _('Lowest delay'));
 		o.value('consistent-hashing', _('Consistent hashing'));
 		o.value('sticky-sessions', _('Sticky sessions'));
@@ -579,7 +579,7 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'balancer_strategy', _('Strategy'),
 			_('How a node is picked for a new connection.'));
-		so.value('round-robin', _('Round robin'));
+		so.value('round-robin', _('Round-robin'));
 		so.value('lowest-delay', _('Lowest delay'));
 		so.value('consistent-hashing', _('Consistent hashing'));
 		so.value('sticky-sessions', _('Sticky sessions'));

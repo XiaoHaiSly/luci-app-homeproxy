@@ -3958,7 +3958,7 @@ msgid "How a node is picked for a new connection."
 msgstr "新建连接的节点调度方式。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Round robin"
+msgid "Round-robin"
 msgstr "轮询调度"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js

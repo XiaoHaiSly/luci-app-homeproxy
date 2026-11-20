@@ -3265,7 +3265,7 @@ msgid "How a node is picked for a new connection."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Round robin"
+msgid "Round-robin"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
