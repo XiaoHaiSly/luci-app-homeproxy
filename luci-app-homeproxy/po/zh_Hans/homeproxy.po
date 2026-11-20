@@ -1243,7 +1243,7 @@ msgstr "分配给接口的 IP（v4 或 v6）地址前缀列表。"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:185
 #: htdocs/luci-static/resources/view/homeproxy/client.js:465
 msgid "List of nodes to test."
-msgstr "在下列节点中测速，自动使用延迟最低的节点。"
+msgstr "自动检测节点延迟，优先选择延迟最低的节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1489
 #: htdocs/luci-static/resources/view/homeproxy/server.js:720
@@ -3903,7 +3903,7 @@ msgstr "Failover 模式"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:251
 #: htdocs/luci-static/resources/view/homeproxy/client.js:594
 msgid "Keep the selected node until it fails instead of always switching to the fastest one."
-msgstr "保持当前节点直到它失效，而不是每次都切换到延迟最低的节点。"
+msgstr "优先保持当前节点，仅在当前节点失效时切换至延迟最低的节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:220
 msgid "Fallback"
@@ -3917,7 +3917,7 @@ msgstr "故障转移节点"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:262
 #: htdocs/luci-static/resources/view/homeproxy/client.js:601
 msgid "Nodes are tried in order, the first that connects is used."
-msgstr "节点发生故障时，自动切换至可用节点。"
+msgstr "当前节点发生故障时，自动切换至可用节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:551
 msgid "Separate Fallback"
@@ -3947,7 +3947,7 @@ msgstr "负载均衡节点"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Connections are spread over the nodes by the selected strategy."
-msgstr "按所选策略把连接分散到各个节点。"
+msgstr "将网络连接分配到多个节点，分散连接压力。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Strategy"
