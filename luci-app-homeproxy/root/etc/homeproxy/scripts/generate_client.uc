@@ -86,9 +86,33 @@ if (!wan_dns)
 
 const dns_port = uci.get(uciconfig, uciinfra, 'dns_port') || '5333';
 
-const dns_server_fallback = normalizeList(uci.get(uciconfig, ucimain, 'dns_server_fallback')),
-      china_dns_server_fallback = normalizeList(uci.get(uciconfig, ucimain, 'china_dns_server_fallback')),
-      dns_fallback_strategy = uci.get(uciconfig, ucimain, 'dns_fallback_strategy') || 'sequential';
+const dns_fallback_strategy = uci.get(uciconfig, ucimain, 'dns_fallback_strategy') || 'sequential';
+
+/*
+ * The configured servers are one group, there is no separate primary and
+ * fallback: the strategy decides how the members are queried.
+ */
+function add_dns_server(list, addr) {
+	if (isEmpty(addr) || type(addr) !== 'string')
+		return;
+
+	if (addr === 'wan')
+		addr = wan_dns;
+
+	if (isEmpty(addr) || addr in list)
+		return;
+
+	push(list, addr);
+}
+
+function dns_server_list(option) {
+	let list = [];
+
+	for (let addr in normalizeList(uci.get(uciconfig, ucimain, option)))
+		add_dns_server(list, addr);
+
+	return list;
+}
 
 const ntp_server = uci.get(uciconfig, uciinfra, 'ntp_server') || 'time.apple.com';
 
@@ -120,14 +144,14 @@ const main_balancer_nodes = normalizeList(uci.get(uciconfig, ucimain, 'main_bala
 if (main_node === 'balancer' && !length(main_balancer_nodes))
 	main_node = 'nil';
 
-dns_server = uci.get(uciconfig, ucimain, 'dns_server');
-if (isEmpty(dns_server) || dns_server === 'wan')
-	dns_server = wan_dns;
+dns_server = dns_server_list('dns_server');
+if (!length(dns_server) && !isEmpty(wan_dns))
+	dns_server = [ wan_dns ];
 
 if (routing_mode === 'bypass_mainland_china') {
-	china_dns_server = uci.get(uciconfig, ucimain, 'china_dns_server');
-	if (isEmpty(china_dns_server) || type(china_dns_server) !== 'string' || china_dns_server === 'wan')
-		china_dns_server = wan_dns;
+	china_dns_server = dns_server_list('china_dns_server');
+	if (!length(china_dns_server) && !isEmpty(wan_dns))
+		china_dns_server = [ wan_dns ];
 }
 dns_default_strategy = (ipv6_support !== '1') ? 'ipv4_only' : null;
 
@@ -705,8 +729,8 @@ config.dns = {
 	client_subnet: null
 };
 
-/* Primary + fallback DNS servers are grouped behind a "fallback" type server */
-function push_dns_server_with_fallback(tag, server_addr, default_protocol, fallback_list, detour, resolver_strategy) {
+/* The configured servers are one group, the strategy decides how they are queried */
+function push_dns_group(tag, server_list, default_protocol, detour, resolver_strategy) {
 	const base = {
 		domain_resolver: {
 			server: 'default-dns',
@@ -715,25 +739,26 @@ function push_dns_server_with_fallback(tag, server_addr, default_protocol, fallb
 		detour: detour
 	};
 
-	if (!length(fallback_list)) {
+	if (!length(server_list))
+		return;
+
+	/* a single server needs no group around it */
+	if (length(server_list) === 1) {
 		push(config.dns.servers, {
 			tag,
 			...base,
-			...parse_dnsserver(server_addr, default_protocol)
+			...parse_dnsserver(server_list[0], default_protocol)
 		});
 		return;
 	}
 
-	const member_tags = [ `${tag}-primary` ];
-	push(config.dns.servers, {
-		tag: member_tags[0],
-		...base,
-		...parse_dnsserver(server_addr, default_protocol)
-	});
+	const member_tags = [];
+	let member_idx = 0;
 
-	let idx = 0;
-	for (let addr in fallback_list) {
-		let member_tag = `${tag}-fallback-${idx++}`;
+	for (let addr in server_list) {
+		const member_tag = `${tag}-${member_idx}`;
+		member_idx++;
+
 		push(config.dns.servers, {
 			tag: member_tag,
 			...base,
@@ -773,7 +798,7 @@ if (tailscale_enabled) {
 
 if (!isEmpty(main_node)) {
 	/* Main DNS */
-	push_dns_server_with_fallback('main-dns', dns_server, 'tcp', dns_server_fallback, main_out_tag,
+	push_dns_group('main-dns', dns_server, 'tcp', main_out_tag,
 		(ipv6_support !== '1') ? 'ipv4_only' : null);
 	config.dns.final = 'main-dns';
 
@@ -793,7 +818,7 @@ if (!isEmpty(main_node)) {
 		});
 
 	if (routing_mode === 'bypass_mainland_china') {
-		push_dns_server_with_fallback('china-dns', china_dns_server, 'udp', china_dns_server_fallback,
+		push_dns_group('china-dns', china_dns_server, 'udp',
 			self_mark ? 'direct-out' : null, 'prefer_ipv6');
 
 		if (length(proxy_domain_list))

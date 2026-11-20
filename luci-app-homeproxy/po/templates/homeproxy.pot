@@ -66,10 +66,6 @@ msgstr ""
 msgid "Add a server"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:280
-msgid "Additional DNS servers used together with the China DNS server above. Support UDP, TCP, DoH, DoQ, DoT."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:275
 msgid "Additional DNS servers used together with the DNS server above. Support UDP, TCP, DoH, DoQ, DoT."
 msgstr ""
@@ -280,10 +276,6 @@ msgstr ""
 msgid "China DNS server"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:279
-msgid "China DNS server (fallback)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:244
 msgid "China IPv4 list version"
 msgstr ""
@@ -372,20 +364,12 @@ msgstr ""
 msgid "DNS Settings"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:285
-msgid "DNS fallback strategy"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/server.js:793
 msgid "DNS provider"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:203
 msgid "DNS server"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:274
-msgid "DNS server (fallback)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:789
@@ -3326,4 +3310,20 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "positive number"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "DNS group strategy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How the servers listed above are queried."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified. Multiple servers are queried as one group."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT. Multiple servers are queried as one group."
 msgstr ""

@@ -53,18 +53,10 @@ for (let option in [ 'main_udp_node', 'main_udp_urltest_nodes',
 	if (uci.get(uciconfig, ucimain, option) !== null)
 		uci.delete(uciconfig, ucimain, option);
 
-/* DNS fallback servers were introduced */
-if (isEmpty(uci.get(uciconfig, ucimain, 'dns_server_fallback')))
-	uci.set(uciconfig, ucimain, 'dns_server_fallback', [
-		'https://dns.google/dns-query',
-		'https://cloudflare-dns.com/dns-query'
-	]);
-
-if (isEmpty(uci.get(uciconfig, ucimain, 'china_dns_server_fallback')))
-	uci.set(uciconfig, ucimain, 'china_dns_server_fallback', [
-		'https://doh.pub/dns-query',
-		'https://dns.alidns.com/dns-query'
-	]);
+/* the DNS servers are a single group now, the separate fallback lists are gone */
+for (let option in [ 'dns_server_fallback', 'china_dns_server_fallback' ])
+	if (uci.get(uciconfig, ucimain, option) !== null)
+		uci.delete(uciconfig, ucimain, option);
 
 if (isEmpty(uci.get(uciconfig, ucimain, 'dns_fallback_strategy')))
 	uci.set(uciconfig, ucimain, 'dns_fallback_strategy', 'sequential');

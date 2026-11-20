@@ -146,8 +146,9 @@ return view.extend({
 		let features = data[1],
 		    hosts = data[2]?.hosts;
 
-		function validateDnsFallback(section_id, value) {
-			if (!value)
+		/* a DNS server entry is an address or the "wan" keyword */
+		function validateDnsServer(section_id, value) {
+			if (!value || value === 'wan')
 				return true;
 
 			let ipv6_support = this.section.formvalue(section_id, 'ipv6_support');
@@ -333,8 +334,8 @@ return view.extend({
 		o.depends('main_node', 'balancer');
 		o.retain = true;
 
-		o = s.taboption('dns', form.Value, 'dns_server', _('DNS server'),
-			_('Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified.'));
+		o = s.taboption('dns', form.DynamicList, 'dns_server', _('DNS server'),
+			_('Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified. Multiple servers are queried as one group.'));
 		o.value('wan', _('WAN DNS (read from interface)'));
 		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
 		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
@@ -344,35 +345,11 @@ return view.extend({
 		o.value('https://cloudflare-dns.com/dns-query', _('CloudFlare Public DNS (DoH)'));
 		o.value('https://dns.quad9.net/dns-query', _('Quad9 Public DNS (DoH)'));
 		o.value('https://dns.adguard-dns.com/dns-query', _('AdGuard Public DNS (DoH)'));
-		o.default = '8.8.8.8';
 		o.rmempty = false;
-		o.validate = function(section_id, value) {
-			if (section_id && !['wan'].includes(value)) {
-				if (!value)
-					return _('Expecting: %s').format(_('non-empty value'));
+		o.validate = validateDnsServer;
 
-				let ipv6_support = this.section.formvalue(section_id, 'ipv6_support');
-				try {
-					let url = new URL(value.replace(/^.*:\/\//, 'http://'));
-					if (stubValidator.apply('hostname', url.hostname))
-						return true;
-					else if (stubValidator.apply('ip4addr', url.hostname))
-						return true;
-					else if ((ipv6_support === '1') && stubValidator.apply('ip6addr', url.hostname.match(/^\[(.+)\]$/)?.[1]))
-						return true;
-					else
-						return _('Expecting: %s').format(_('valid DNS server address'));
-				} catch(e) {}
-
-				if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', value))
-					return _('Expecting: %s').format(_('valid DNS server address'));
-			}
-
-			return true;
-		}
-
-		o = s.taboption('dns', form.Value, 'china_dns_server', _('China DNS server'),
-			_('The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT.'));
+		o = s.taboption('dns', form.DynamicList, 'china_dns_server', _('China DNS server'),
+			_('The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT. Multiple servers are queried as one group.'));
 		o.value('wan', _('WAN DNS (read from interface)'));
 		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
 		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
@@ -383,62 +360,12 @@ return view.extend({
 		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DoH)'));
 		o.value('https://doh-pure.onedns.net/dns-query', _('ThreatBook Public DNS (DoH)'));
 		o.depends('routing_mode', 'bypass_mainland_china');
-		o.default = '223.5.5.5';
 		o.rmempty = false;
 		o.retain = true;
-		o.validate = function(section_id, value) {
-			if (section_id && !['wan'].includes(value)) {
-				if (!value)
-					return _('Expecting: %s').format(_('non-empty value'));
+		o.validate = validateDnsServer;
 
-				try {
-					let url = new URL(value.replace(/^.*:\/\//, 'http://'));
-					if (stubValidator.apply('hostname', url.hostname))
-						return true;
-					else if (stubValidator.apply('ip4addr', url.hostname))
-						return true;
-					else if (stubValidator.apply('ip6addr', url.hostname.match(/^\[(.+)\]$/)?.[1]))
-						return true;
-					else
-						return _('Expecting: %s').format(_('valid DNS server address'));
-				} catch(e) {}
-
-				if (!stubValidator.apply('ipaddr', value))
-					return _('Expecting: %s').format(_('valid DNS server address'));
-			}
-
-			return true;
-		}
-
-		o = s.taboption('dns', form.DynamicList, 'dns_server_fallback', _('DNS server (fallback)'),
-			_('Additional DNS servers used together with the DNS server above. Support UDP, TCP, DoH, DoQ, DoT.'));
-		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
-		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
-		o.value('9.9.9.9', _('Quad9 Public DNS (9.9.9.9)'));
-		o.value('94.140.14.14', _('AdGuard Public DNS (94.140.14.14)'));
-		o.value('https://dns.google/dns-query', _('Google Public DNS (DoH)'));
-		o.value('https://cloudflare-dns.com/dns-query', _('CloudFlare Public DNS (DoH)'));
-		o.value('https://dns.quad9.net/dns-query', _('Quad9 Public DNS (DoH)'));
-		o.value('https://dns.adguard-dns.com/dns-query', _('AdGuard Public DNS (DoH)'));
-		o.retain = true;
-		o.validate = validateDnsFallback;
-
-		o = s.taboption('dns', form.DynamicList, 'china_dns_server_fallback', _('China DNS server (fallback)'),
-			_('Additional DNS servers used together with the China DNS server above. Support UDP, TCP, DoH, DoQ, DoT.'));
-		o.depends('routing_mode', 'bypass_mainland_china');
-		o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
-		o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
-		o.value('117.50.10.10', _('ThreatBook Public DNS (117.50.10.10)'));
-		o.value('180.184.1.1', _('TrafficRoute Public DNS (180.184.1.1)'));
-		o.value('https://dns.alidns.com/dns-query', _('Aliyun Public DNS (DoH)'));
-		o.value('https://doh.pub/dns-query', _('Tencent Public DNS (DoH)'));
-		o.value('https://doh.360.cn/dns-query', _('360 Public DNS (DoH)'));
-		o.value('https://doh-pure.onedns.net/dns-query', _('ThreatBook Public DNS (DoH)'));
-		o.retain = true;
-		o.validate = validateDnsFallback;
-
-		o = s.taboption('dns', form.ListValue, 'dns_fallback_strategy', _('DNS fallback strategy'),
-			_('How to query the primary and fallback DNS servers when fallback servers are configured above.'));
+		o = s.taboption('dns', form.ListValue, 'dns_fallback_strategy', _('DNS group strategy'),
+			_('How the servers listed above are queried.'));
 		o.value('sequential', _('Sequential (try in order)'));
 		o.value('parallel', _('Parallel (query all at once)'));
 		o.value('fastest', _('Fastest (re-test periodically)'));

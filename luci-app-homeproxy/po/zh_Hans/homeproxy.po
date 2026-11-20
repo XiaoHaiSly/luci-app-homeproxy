@@ -75,10 +75,6 @@ msgstr "新增路由规则"
 msgid "Add a server"
 msgstr "新增服务器"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:280
-msgid "Additional DNS servers used together with the China DNS server above. Support UDP, TCP, DoH, DoQ, DoT."
-msgstr "与上方国内 DNS 服务器配合使用的备用 DNS 服务器。支持 UDP、TCP、DoH、DoQ、DoT。"
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:275
 msgid "Additional DNS servers used together with the DNS server above. Support UDP, TCP, DoH, DoQ, DoT."
 msgstr "与上方 DNS 服务器配合使用的备用 DNS 服务器。支持 UDP、TCP、DoH、DoQ、DoT。"
@@ -289,10 +285,6 @@ msgstr "检查更新"
 msgid "China DNS server"
 msgstr "国内 DNS 服务器"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:279
-msgid "China DNS server (fallback)"
-msgstr "国内 DNS 服务器（备用）"
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:244
 msgid "China IPv4 list version"
 msgstr "国内 IPv4 库版本"
@@ -381,10 +373,6 @@ msgstr "自定义规则类型"
 msgid "DNS Settings"
 msgstr "DNS 设置"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:285
-msgid "DNS fallback strategy"
-msgstr "DNS 备用策略"
-
 #: htdocs/luci-static/resources/view/homeproxy/server.js:793
 msgid "DNS provider"
 msgstr "DNS 提供商"
@@ -392,10 +380,6 @@ msgstr "DNS 提供商"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:203
 msgid "DNS server"
 msgstr "DNS 服务器"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:274
-msgid "DNS server (fallback)"
-msgstr "DNS 服务器（备用）"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:789
 msgid "DNS01 challenge"
@@ -4020,3 +4004,19 @@ msgstr "其他节点要快出当前延迟的多少比例，才能接管当前选
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "positive number"
 msgstr "正数"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "DNS group strategy"
+msgstr "DNS 组策略"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "How the servers listed above are queried."
+msgstr "上面列出的这些服务器如何查询。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified. Multiple servers are queried as one group."
+msgstr "支持 UDP、TCP、DoH、DoQ、DoT，未指定协议时使用 TCP。多个服务器会作为一个组查询。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT. Multiple servers are queried as one group."
+msgstr "用于解析国内域名的 DNS 服务器，支持 UDP、TCP、DoH、DoQ、DoT。多个服务器会作为一个组查询。"
