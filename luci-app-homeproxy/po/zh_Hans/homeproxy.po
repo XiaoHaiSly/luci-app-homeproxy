@@ -3959,7 +3959,7 @@ msgstr "新建连接的节点调度方式。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Round robin"
-msgstr "轮询"
+msgstr "轮询调度"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Lowest delay"
@@ -3967,7 +3967,7 @@ msgstr "最低延迟"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Consistent hashing"
-msgstr "一致性哈希"
+msgstr "一致哈希"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Sticky sessions"
@@ -3975,7 +3975,7 @@ msgstr "会话保持"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Pool"
-msgstr "固定槽位"
+msgstr "节点池化"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Delay tolerance ratio"
