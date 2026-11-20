@@ -1243,7 +1243,7 @@ msgstr "分配给接口的 IP（v4 或 v6）地址前缀列表。"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:185
 #: htdocs/luci-static/resources/view/homeproxy/client.js:465
 msgid "List of nodes to test."
-msgstr "要测试的节点列表。"
+msgstr "在下列节点中测速，自动使用延迟最低的节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1489
 #: htdocs/luci-static/resources/view/homeproxy/server.js:720
