@@ -833,20 +833,56 @@ if (!isEmpty(main_node)) {
 			action: 'route',
 			server: 'china-dns'
 		});
+
+		/* Known foreign domains are answered by the remote resolver at once */
 		push(config.dns.rules, {
-			type: 'logical',
-			mode: 'and',
-			rules: [
-				{
-					rule_set: 'geosite-noncn',
-					invert: true
-				},
-				{
-					rule_set: 'geoip-cn'
-				}
-			],
+			rule_set: 'geosite-noncn',
 			action: 'route',
-			server: 'china-dns'
+			server: 'main-dns'
+		});
+
+		/*
+		 * Unknown domains: ask the China resolver first, and fall back to the
+		 * remote one when the answer is an error or points outside China, so a
+		 * poisoned answer never reaches an app. The accepted answer is returned
+		 * from the evaluated response, so it costs no second query.
+		 */
+		push(config.dns.rules, {
+			query_type: [ 1, 28 ],
+			action: 'evaluate',
+			server: 'china-dns',
+			tag: 'cn-answer',
+			timeout: '3s'
+		});
+		push(config.dns.rules, {
+			query_type: [ 1, 28 ],
+			match_response: 'cn-answer',
+			response_rcode: 'NOERROR',
+			invert: true,
+			action: 'evaluate',
+			server: 'main-dns',
+			tag: 'fallback-rcode'
+		});
+		push(config.dns.rules, {
+			query_type: [ 1, 28 ],
+			match_response: 'cn-answer',
+			rule_set: 'geoip-cn',
+			invert: true,
+			action: 'evaluate',
+			server: 'main-dns',
+			tag: 'fallback-ip'
+		});
+		push(config.dns.rules, {
+			match_response: 'fallback-rcode',
+			action: 'respond'
+		});
+		push(config.dns.rules, {
+			match_response: 'fallback-ip',
+			action: 'respond'
+		});
+		push(config.dns.rules, {
+			match_response: 'cn-answer',
+			action: 'respond'
 		});
 	}
 }
