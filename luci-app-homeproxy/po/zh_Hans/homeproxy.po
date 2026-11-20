@@ -3907,21 +3907,21 @@ msgstr "保持当前节点直到它失效，而不是每次都切换到延迟最
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:220
 msgid "Fallback"
-msgstr ""
+msgstr "故障转移"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:261
 #: htdocs/luci-static/resources/view/homeproxy/client.js:600
 msgid "Fallback nodes"
-msgstr "Fallback 节点"
+msgstr "故障转移节点"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:262
 #: htdocs/luci-static/resources/view/homeproxy/client.js:601
 msgid "Nodes are tried in order, the first that connects is used."
-msgstr "按顺序尝试节点，使用第一个连接成功的节点。"
+msgstr "节点发生故障时，自动切换至可用节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:551
 msgid "Separate Fallback"
-msgstr "独立 Fallback"
+msgstr "独立故障转移"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:270
 #: htdocs/luci-static/resources/view/homeproxy/client.js:609
