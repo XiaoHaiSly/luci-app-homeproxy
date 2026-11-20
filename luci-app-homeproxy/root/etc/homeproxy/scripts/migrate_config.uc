@@ -39,10 +39,6 @@ for (let option in [ 'bypass_china_ip', 'reject_quic' ])
 if (uci.get(uciconfig, ucimain, 'tcpip_stack') !== null)
 	uci.delete(uciconfig, ucimain, 'tcpip_stack');
 
-/* the IPv6 fallback is now part of the IPv6 support switch */
-if (uci.get(uciconfig, ucimain, 'ipv6_fallback') !== null)
-	uci.delete(uciconfig, ucimain, 'ipv6_fallback');
-
 /* the common port preset was extended, migrate the old default in place */
 const legacy_common_port = '22,53,80,143,443,465,587,853,873,993,995,5222,8080,8443,9418';
 const common_port = uci.get(uciconfig, 'infra', 'common_port');
