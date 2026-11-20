@@ -3331,3 +3331,39 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "IPv6 automatic fallback"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Encryption"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Xray VLESS encryption, for example <code>mlkem768x25519plus.native.0rtt.&lt;server key&gt;</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Leave it empty unless the server requires it."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Mixed-case server name"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Send the server name with a random case on every connection, so a filter that compares it byte by byte does not match."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "ClientHello padding"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Padding extension size in bytes, a number or a range such as <code>800-1200</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Replaces the padding extension of a fixed uTLS fingerprint, ignored otherwise."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "number or range"
+msgstr ""

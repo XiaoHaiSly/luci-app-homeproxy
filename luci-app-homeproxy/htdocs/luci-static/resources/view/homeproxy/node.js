@@ -282,7 +282,8 @@ function parseShareLink(uri, features) {
 				tls_reality_public_key: params.get('pbk') ? decodeURIComponent(params.get('pbk')) : null,
 				tls_reality_short_id: params.get('sid'),
 				tls_utls: features.with_utls ? params.get('fp') : null,
-				vless_flow: ['tls', 'reality'].includes(params.get('security')) ? params.get('flow') : null
+				vless_flow: ['tls', 'reality'].includes(params.get('security')) ? params.get('flow') : null,
+				vless_encryption: params.get('encryption') || null
 			};
 			switch (params.get('type')) {
 			case 'grpc':
@@ -933,6 +934,14 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.value('xtls-rprx-vision');
 	o.depends('type', 'vless');
 	o.modalonly = true;
+
+	o = s.option(form.Value, 'vless_encryption', _('Encryption'),
+		_('Xray VLESS encryption, for example <code>mlkem768x25519plus.native.0rtt.&lt;server key&gt;</code>.') +
+		'<br/>' +
+		_('Leave it empty unless the server requires it.'));
+	o.depends('type', 'vless');
+	o.modalonly = true;
+	o.retain = true;
 
 	o = s.option(form.Value, 'vmess_alterid', _('Alter ID'),
 		_('Legacy protocol support (VMess MD5 Authentication) is provided for compatibility purposes only, use of alterId > 1 is not recommended.'));
@@ -1625,6 +1634,33 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 		_('Client side only, works with every TLS based protocol.'));
 	o.depends('tls', '1');
 	o.modalonly = true;
+
+	o = s.option(form.Flag, 'tls_tricks_mixedcase', _('Mixed-case server name'),
+		_('Send the server name with a random case on every connection, so a filter that compares it byte by byte does not match.'));
+	o.depends({'tls': '1', 'tls_reality': '0'});
+	o.modalonly = true;
+	o.retain = true;
+
+	o = s.option(form.Value, 'tls_tricks_padding', _('ClientHello padding'),
+		_('Padding extension size in bytes, a number or a range such as <code>800-1200</code>.') +
+		'<br/>' +
+		_('Replaces the padding extension of a fixed uTLS fingerprint, ignored otherwise.'));
+	o.depends({'tls': '1', 'tls_reality': '0'});
+	o.modalonly = true;
+	o.retain = true;
+	o.validate = function(section_id, value) {
+		if (!value)
+			return true;
+
+		if (!/^[0-9]+(-[0-9]+)?$/.test(value))
+			return _('Expecting: %s').format(_('number or range'));
+
+		for (let part of value.split('-'))
+			if (parseInt(part) < 1 || parseInt(part) > 16000)
+				return _('Expecting: %s').format(_('number or range'));
+
+		return true;
+	};
 
 	o = s.option(form.Value, 'tls_fragment_fallback_delay', _('Fragment fallback delay'),
 		_('How long to wait before falling back to a whole ClientHello, e.g. <code>500ms</code>.') +

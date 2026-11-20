@@ -428,6 +428,22 @@ function generate_outbound(node) {
 	if (tls_reality_on && isEmpty(node.tls_utls))
 		warn('homeproxy: REALITY requires uTLS, falling back to the chrome fingerprint.\n');
 
+	/*
+	 * ClientHello tricks: a mixed case server name needs nothing else, the
+	 * padding extension replaces the one of a fixed uTLS fingerprint and is
+	 * refused with the random fingerprints. REALITY builds its own ClientHello.
+	 */
+	const tls_tricks_sni = (node.tls === '1' && !tls_reality_on) ?
+		strToBool(node.tls_tricks_mixedcase) : null;
+
+	let tls_tricks_padding = (node.tls === '1' && !tls_reality_on) ? node.tls_tricks_padding : null;
+
+	if (!isEmpty(tls_tricks_padding) && (isEmpty(node.tls_utls) ||
+	    node.tls_utls === 'random' || node.tls_utls === 'randomized')) {
+		warn('homeproxy: the ClientHello padding needs a fixed uTLS fingerprint, ignoring it.\n');
+		tls_tricks_padding = null;
+	}
+
 	const is_xhttp = (node.transport === 'xhttp'),
 	      xhttp_packet_up = is_xhttp && (node.xhttp_mode === 'packet-up');
 
@@ -506,6 +522,7 @@ function generate_outbound(node) {
 		heartbeat: strToTime(node.tuic_heartbeat),
 		/* VLESS / VMess */
 		flow: node.vless_flow,
+		encryption: (node.type === 'vless') ? node.vless_encryption : null,
 		alter_id: strToInt(node.vmess_alterid),
 		security: node.vmess_encrypt,
 		global_padding: strToBool(node.vmess_global_padding),
@@ -554,6 +571,11 @@ function generate_outbound(node) {
 				enabled: true,
 				public_key: node.tls_reality_public_key,
 				short_id: node.tls_reality_short_id
+			} : null,
+			tls_tricks: (tls_tricks_sni || !isEmpty(tls_tricks_padding)) ? {
+				mixedcase_sni: tls_tricks_sni,
+				padding_mode: (!isEmpty(tls_tricks_padding)) ? 'random' : null,
+				padding_size: tls_tricks_padding
 			} : null
 		} : null,
 		transport: !isEmpty(node.transport) ? {

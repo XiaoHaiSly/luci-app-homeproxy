@@ -4024,3 +4024,39 @@ msgstr "用于解析国内域名的 DNS 服务器，支持 UDP、TCP、DoH、DoQ
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "IPv6 automatic fallback"
 msgstr "IPv6 自动回退"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Encryption"
+msgstr "加密"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Xray VLESS encryption, for example <code>mlkem768x25519plus.native.0rtt.&lt;server key&gt;</code>."
+msgstr "Xray 的 VLESS 加密，例如 <code>mlkem768x25519plus.native.0rtt.&lt;服务器公钥&gt;</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Leave it empty unless the server requires it."
+msgstr "服务器没要求就留空。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Mixed-case server name"
+msgstr "服务器名大小写混排"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Send the server name with a random case on every connection, so a filter that compares it byte by byte does not match."
+msgstr "每次连接都用随机大小写发送服务器名，按字节比对的过滤就匹配不到。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "ClientHello padding"
+msgstr "ClientHello 填充"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Padding extension size in bytes, a number or a range such as <code>800-1200</code>."
+msgstr "填充扩展的字节数，可以是单个数字或范围，例如 <code>800-1200</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Replaces the padding extension of a fixed uTLS fingerprint, ignored otherwise."
+msgstr "会替换固定 uTLS 指纹自带的填充扩展；没有固定指纹时忽略。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "number or range"
+msgstr "数字或范围"

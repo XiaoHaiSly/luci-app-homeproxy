@@ -356,7 +356,8 @@ function parse_uri(uri) {
 				tls_reality_public_key: params.pbk ? urldecode(params.pbk) : null,
 				tls_reality_short_id: params.sid,
 				tls_utls: sing_features.with_utls ? params.fp : null,
-				vless_flow: (params.security in ['tls', 'reality']) ? params.flow : null
+				vless_flow: (params.security in ['tls', 'reality']) ? params.flow : null,
+				vless_encryption: params.encryption || null
 			};
 			switch(params.type) {
 			case 'grpc':
