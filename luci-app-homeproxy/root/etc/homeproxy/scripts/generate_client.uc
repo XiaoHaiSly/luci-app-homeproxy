@@ -1536,8 +1536,7 @@ if (!isEmpty(main_node))
  * Learn the IPv6 capability of every server from its URL test, so the first
  * IPv6 connection does not have to wait for the fallback to kick in.
  */
-if (ipv6_support === '1' && strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback')) &&
-    strToBool(uci.get(uciconfig, ucimain, 'ipv6_verify')))
+if (ipv6_support === '1' && strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback')))
 	config.experimental.monitoring = {
 		verify_ipv6: true
 	};

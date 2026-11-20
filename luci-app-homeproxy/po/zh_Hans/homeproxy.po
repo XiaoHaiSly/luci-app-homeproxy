@@ -4022,17 +4022,5 @@ msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, D
 msgstr "用于解析国内域名的 DNS 服务器，支持 UDP、TCP、DoH、DoQ、DoT。多个服务器会作为一个组查询。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "IPv6 compatibility fallback"
-msgstr "IPv6 兼容回退"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "When the selected server carries no IPv6, the IPv6 connection is carried over IPv4 instead and the app does not notice."
-msgstr "当所选服务器没有 IPv6 时，IPv6 连接会自动改走 IPv4，应用不会察觉。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Probe server IPv6 support"
-msgstr "提前探测出站 IPv6"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Check every server for IPv6 after its URL test, so the first IPv6 connection does not have to wait for the fallback."
-msgstr "测速后检查每台服务器是否支持 IPv6，让首次 IPv6 连接不必等待回退。"
+msgid "IPv6 automatic fallback"
+msgstr "IPv6 自动回退"

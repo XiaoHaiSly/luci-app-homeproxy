@@ -3329,17 +3329,5 @@ msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, D
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "IPv6 compatibility fallback"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "When the selected server carries no IPv6, the IPv6 connection is carried over IPv4 instead and the app does not notice."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Probe server IPv6 support"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Check every server for IPv6 after its URL test, so the first IPv6 connection does not have to wait for the fallback."
+msgid "IPv6 automatic fallback"
 msgstr ""
