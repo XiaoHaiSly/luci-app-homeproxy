@@ -4011,7 +4011,7 @@ msgstr "DNS 组策略"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "How the servers listed above are queried."
-msgstr "上面列出的这些服务器如何查询。"
+msgstr "上述 DNS 服务器的查询方式。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified. Multiple servers are queried as one group."
