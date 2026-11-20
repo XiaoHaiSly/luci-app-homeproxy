@@ -1271,10 +1271,7 @@ if (!isEmpty(main_node)) {
 				type: 'remote',
 				tag,
 				format,
-				url,
-				http_client: {
-					detour: main_out_tag
-				}
+				url
 			});
 		};
 
@@ -1379,28 +1376,19 @@ if (!isEmpty(main_node)) {
 			type: 'remote',
 			tag: 'geoip-cn',
 			format: 'binary',
-			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs',
-			http_client: {
-				detour: main_out_tag
-			}
+			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs'
 		});
 		push(config.route.rule_set, {
 			type: 'remote',
 			tag: 'geosite-cn',
 			format: 'binary',
-			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs',
-			http_client: {
-				detour: main_out_tag
-			}
+			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs'
 		});
 		push(config.route.rule_set, {
 			type: 'remote',
 			tag: 'geosite-noncn',
 			format: 'binary',
-			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-!cn.srs',
-			http_client: {
-				detour: main_out_tag
-			}
+			url: 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-!cn.srs'
 		});
 
 		/*
@@ -1476,6 +1464,22 @@ if (config.route.rule_set && isEmpty(config.route.rule_set))
 	config.route.rule_set = null;
 if (config.dns.rules && isEmpty(config.dns.rules))
 	config.dns.rules = null;
+
+/*
+ * Remote rule-sets download through the main outbound. They share one HTTP
+ * client instead of carrying an inline one each: the inline option is the
+ * replacement of "download_detour", which is deprecated since sing-box 1.14,
+ * and an undefined default client is deprecated as well.
+ */
+if (config.route.rule_set && outbound_tag_defined(main_out_tag)) {
+	config.http_clients = [
+		{
+			tag: 'rule-set-client',
+			detour: main_out_tag
+		}
+	];
+	config.route.default_http_client = 'rule-set-client';
+}
 
 /* Experimental start */
 /*
