@@ -428,6 +428,20 @@ return view.extend({
 		o.default = o.enabled;
 		o.rmempty = false;
 
+		o = s.taboption('routing', form.Flag, 'ipv6_fallback', _('IPv6 compatibility fallback'),
+			_('When the selected server carries no IPv6, the IPv6 connection is carried over IPv4 instead and the app does not notice.'));
+		o.default = o.enabled;
+		o.rmempty = false;
+		o.depends('ipv6_support', '1');
+		o.retain = true;
+
+		o = s.taboption('routing', form.Flag, 'ipv6_verify', _('Probe server IPv6 support'),
+			_('Check every server for IPv6 after its URL test, so the first IPv6 connection does not have to wait for the fallback.'));
+		o.default = o.enabled;
+		o.rmempty = false;
+		o.depends({ 'ipv6_support': '1', 'ipv6_fallback': '1' });
+		o.retain = true;
+
 		/* Application routing start */
 		s.tab('app_rules', _('Routing Rules'));
 		o = s.taboption('app_rules', form.SectionValue, '_app_rules', form.GridSection, 'app_rule');

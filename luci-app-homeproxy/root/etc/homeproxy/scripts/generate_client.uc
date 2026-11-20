@@ -1213,6 +1213,13 @@ config.route = {
 	default_interface: default_interface
 };
 
+/*
+ * An IPv6 connection through a server that turns out not to carry IPv6 is
+ * carried over IPv4 inside the connection, so the app never sees it fail.
+ */
+if (ipv6_support === '1')
+	config.route.ipv6_fallback = strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback'));
+
 /* Avoid DNS loop, china-dns only exists with a main node */
 config.route.default_domain_resolver = {
 	action: 'route',
@@ -1523,6 +1530,16 @@ config.experimental = {
 if (!isEmpty(main_node))
 	config.experimental.unified_delay = {
 		enabled: true
+	};
+
+/*
+ * Learn the IPv6 capability of every server from its URL test, so the first
+ * IPv6 connection does not have to wait for the fallback to kick in.
+ */
+if (ipv6_support === '1' && strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback')) &&
+    strToBool(uci.get(uciconfig, ucimain, 'ipv6_verify')))
+	config.experimental.monitoring = {
+		verify_ipv6: true
 	};
 /*
  * Clash API: the LuCI page reads the current node delay from it. It always
