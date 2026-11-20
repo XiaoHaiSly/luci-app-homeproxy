@@ -3971,7 +3971,7 @@ msgstr "一致哈希"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Sticky sessions"
-msgstr "会话保持"
+msgstr "粘性会话"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Pool"
