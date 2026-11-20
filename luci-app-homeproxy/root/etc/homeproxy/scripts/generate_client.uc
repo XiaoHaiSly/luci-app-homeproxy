@@ -1270,7 +1270,7 @@ config.route = {
  * carried over IPv4 inside the connection, so the app never sees it fail.
  */
 if (ipv6_support === '1')
-	config.route.ipv6_fallback = strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback'));
+	config.route.ipv6_fallback = true;
 
 /* Avoid DNS loop, china-dns only exists with a main node */
 config.route.default_domain_resolver = {
@@ -1588,7 +1588,7 @@ if (!isEmpty(main_node))
  * Learn the IPv6 capability of every server from its URL test, so the first
  * IPv6 connection does not have to wait for the fallback to kick in.
  */
-if (ipv6_support === '1' && strToBool(uci.get(uciconfig, ucimain, 'ipv6_fallback')))
+if (ipv6_support === '1')
 	config.experimental.monitoring = {
 		verify_ipv6: true
 	};

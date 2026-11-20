@@ -395,12 +395,6 @@ return view.extend({
 		o.default = o.enabled;
 		o.rmempty = false;
 
-		o = s.taboption('routing', form.Flag, 'ipv6_fallback', _('IPv6 automatic fallback'));
-		o.default = o.enabled;
-		o.rmempty = false;
-		o.depends('ipv6_support', '1');
-		o.retain = true;
-
 		/* Application routing start */
 		s.tab('app_rules', _('Routing Rules'));
 		o = s.taboption('app_rules', form.SectionValue, '_app_rules', form.GridSection, 'app_rule');

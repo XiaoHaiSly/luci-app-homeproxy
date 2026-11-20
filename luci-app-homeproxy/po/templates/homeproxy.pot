@@ -3328,10 +3328,6 @@ msgstr ""
 msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT. Multiple servers are queried as one group."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "IPv6 automatic fallback"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Encryption"
 msgstr ""

@@ -4021,10 +4021,6 @@ msgstr "支持 UDP、TCP、DoH、DoQ、DoT，未指定协议时使用 TCP。多�
 msgid "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT. Multiple servers are queried as one group."
 msgstr "用于解析国内域名的 DNS 服务器，支持 UDP、TCP、DoH、DoQ、DoT。多个服务器会作为一个组查询。"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "IPv6 automatic fallback"
-msgstr "IPv6 自动回退"
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Encryption"
 msgstr "加密"
