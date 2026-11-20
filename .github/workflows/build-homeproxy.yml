@@ -1,0 +1,207 @@
+name: Build HomeProxy
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (空则自动生成 YYYY.MM.DD-rN)'
+        type: string
+        required: false
+        default: ''
+      publish_release:
+        description: '发布到 GitHub Releases'
+        type: boolean
+        default: false
+
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'luci-app-homeproxy/**'
+      - '.github/scripts/build.sh'
+      - '.github/workflows/build-homeproxy.yml'
+
+  pull_request:
+    branches:
+      - 'main'
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'luci-app-homeproxy/**'
+      - '.github/scripts/build.sh'
+      - '.github/workflows/build-homeproxy.yml'
+
+concurrency:
+  group: build-homeproxy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source tree
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Checkout apk
+        uses: actions/checkout@v6
+        with:
+          repository: 'alpinelinux/apk-tools'
+          path: 'apk-tools'
+          fetch-depth: 0
+          ref: 'b5a31c0d865342ad80be10d68f1bb3d3ad9b0866'
+
+      - name: Checkout po2lmo
+        uses: actions/checkout@v6
+        with:
+          repository: 'openwrt/luci'
+          path: 'po2lmo'
+          sparse-checkout: 'modules/luci-base/src'
+
+      - name: Setup dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo -E rm -rf /var/lib/man-db/auto-update
+          sudo -E apt-get update -qq
+          sudo -E apt-get install -y build-essential curl fakeroot libssl-dev lua5.1 meson ninja-build
+
+          pushd apk-tools
+          meson setup build \
+            -Db_lto=true \
+            -Dcompressed-help=false \
+            -Ddocs=disabled \
+            -Dhelp=enabled \
+            -Dlua_version=5.1 \
+            -Ddefault_library=static \
+            -Durl_backend=wget \
+            -Dzstd=false \
+            -Dpython=disabled \
+            -Dtests=disabled \
+            -Dcrypto_backend=openssl
+          ninja -C build
+          sudo -E meson install -C build --strip
+          popd
+
+          pushd po2lmo/modules/luci-base/src
+          make po2lmo
+          sudo -E install -m0755 -s po2lmo /usr/local/bin/po2lmo
+          popd
+
+          curl -fLO "https://raw.githubusercontent.com/openwrt/openwrt/master/scripts/ipkg-build"
+          sudo install -m0755 ipkg-build /usr/local/bin/ipkg-build
+
+      - name: Setup APK signing key
+        env:
+          APK_SIGNING_KEY: ${{ secrets.APK_SIGNING_KEY }}
+        run: |
+          mkdir -p dist
+          if [ -n "$APK_SIGNING_KEY" ]; then
+            echo "$APK_SIGNING_KEY" > /tmp/apk-signing.key
+            chmod 600 /tmp/apk-signing.key
+            echo "APK_SIGN_KEY=/tmp/apk-signing.key" >> "$GITHUB_ENV"
+            openssl rsa -in /tmp/apk-signing.key -pubout -out dist/homeproxy.pub 2>/dev/null ||
+              openssl ec -in /tmp/apk-signing.key -pubout -out dist/homeproxy.pub 2>/dev/null || true
+            [ -s dist/homeproxy.pub ] || rm -f dist/homeproxy.pub
+          else
+            echo "No APK_SIGNING_KEY secret set, the apk will be unsigned."
+          fi
+
+      - name: Build apk and ipk files
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          pushd .github/scripts
+          fakeroot bash build.sh all snapshot "$INPUT_VERSION"
+          popd
+
+          mv -f .github/scripts/luci-app-homeproxy_*_all.apk dist/
+          mv -f .github/scripts/luci-app-homeproxy_*_all.ipk dist/
+
+          APK_ASSET_NAME="$(basename dist/luci-app-homeproxy_*_all.apk)"
+          IPK_ASSET_NAME="$(basename dist/luci-app-homeproxy_*_all.ipk)"
+          PKG_VERSION="${APK_ASSET_NAME#luci-app-homeproxy_}"
+          PKG_VERSION="${PKG_VERSION%_all.apk}"
+          echo "APK_ASSET_NAME=$APK_ASSET_NAME" >> "$GITHUB_ENV"
+          echo "IPK_ASSET_NAME=$IPK_ASSET_NAME" >> "$GITHUB_ENV"
+          echo "PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
+          echo "Built $APK_ASSET_NAME and $IPK_ASSET_NAME (version $PKG_VERSION)"
+
+      - name: Verify apk contents
+        run: |
+          set -e
+          f="dist/$APK_ASSET_NAME"
+          echo "== $f =="
+          ls -lh "$f"
+
+          rm -rf "$RUNNER_TEMP/extracted"
+          mkdir -p "$RUNNER_TEMP/extracted"
+          apk extract --destination "$RUNNER_TEMP/extracted" --no-chown --allow-untrusted "$f"
+
+          test -f "$RUNNER_TEMP/extracted/etc/config/homeproxy"
+          test -f "$RUNNER_TEMP/extracted/etc/homeproxy/scripts/generate_client.uc"
+          test -f "$RUNNER_TEMP/extracted/etc/homeproxy/dashboard/index.html"
+          test -f "$RUNNER_TEMP/extracted/www/luci-static/resources/view/homeproxy/client.js"
+          test -f "$RUNNER_TEMP/extracted/usr/lib/lua/luci/i18n/homeproxy.zh-cn.lmo"
+
+          echo "files in package: $(find "$RUNNER_TEMP/extracted" -type f | wc -l)"
+
+      - name: Show ipk contents
+        run: |
+          f="dist/$IPK_ASSET_NAME"
+          echo "== $f =="
+          ls -lh "$f"
+          tar -tzf "$f" || true
+
+      - name: Verify apk signature
+        if: env.APK_SIGN_KEY != ''
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          cp dist/homeproxy.pub "$RUNNER_TEMP/keys/"
+          apk verify --keys-dir "$RUNNER_TEMP/keys" "dist/$APK_ASSET_NAME"
+
+      - name: Show apk package info
+        run: |
+          apk adbdump "dist/$APK_ASSET_NAME" | sed -n '1,40p'
+
+      - name: Publishing apk to GitHub Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.APK_ASSET_NAME }}
+          path: dist/${{ env.APK_ASSET_NAME }}
+          archive: false
+
+      - name: Publishing ipk to GitHub Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.IPK_ASSET_NAME }}
+          path: dist/${{ env.IPK_ASSET_NAME }}
+          archive: false
+
+      - name: Publishing signing public key to GitHub Artifacts
+        uses: actions/upload-artifact@v7
+        if: env.APK_SIGN_KEY != ''
+        with:
+          name: homeproxy.pub
+          path: dist/homeproxy.pub
+          archive: false
+
+      - name: Publishing to GitHub Releases
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+        with:
+          repo_token: ${{ github.token }}
+          file: dist/*
+          file_glob: true
+          overwrite: true
+          tag: luci-app-homeproxy-${{ env.PKG_VERSION }}
+          release_name: luci-app-homeproxy ${{ env.PKG_VERSION }}
+          prerelease: false
+          draft: false
+          body: 'apk (OpenWrt snapshots) and ipk (OpenWrt releases) builds of luci-app-homeproxy.'

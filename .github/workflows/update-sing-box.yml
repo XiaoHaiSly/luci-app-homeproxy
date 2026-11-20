@@ -1,0 +1,111 @@
+name: hiddify-core 版本检查同步
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repository-maintenance
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: 检查并更新 hiddify-core 核心
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: 检出软件包仓库
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: 同步默认分支
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch origin "$PACKAGE_BRANCH"
+          target="$(git rev-parse "origin/$PACKAGE_BRANCH")"
+          printf '同步仓库：%s，分支：%s，目标提交：%s\n' \
+            "$(pwd)" "$PACKAGE_BRANCH" "$target"
+          git reset --hard "origin/$PACKAGE_BRANCH"
+
+      - name: 检查 hiddify-core 上游版本
+        id: upstream
+        run: |
+          makefile='hiddify-core/Makefile'
+
+          upstream_tag="$(gh api 'repos/hiddify/hiddify-core/releases?per_page=30' \
+            --jq '[.[] | select(.draft == false and .prerelease == false)][0].tag_name')"
+          [[ "$upstream_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+          upstream_version="${upstream_tag#v}"
+          current_version="$(sed -n 's/^PKG_VERSION:=//p' "$makefile")"
+
+          changed=true
+
+          if [[ "$current_version" == "$upstream_version" ]]; then
+            changed=false
+            echo "hiddify-core 已是最新版：$upstream_version"
+          fi
+
+          {
+            echo "changed=$changed"
+            echo "tag=$upstream_tag"
+            echo "version=$upstream_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 更新 hiddify-core 软件包元数据
+        if: steps.upstream.outputs.changed == 'true'
+        env:
+          UPSTREAM_TAG: ${{ steps.upstream.outputs.tag }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          makefile='hiddify-core/Makefile'
+
+          sed -i \
+            -e "s/^PKG_VERSION:=.*/PKG_VERSION:=$UPSTREAM_VERSION/" \
+            -e "s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/" \
+            -e "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$UPSTREAM_TAG/" \
+            "$makefile"
+
+          grep -Fx "PKG_VERSION:=$UPSTREAM_VERSION" "$makefile"
+          grep -Fx "PKG_RELEASE:=1" "$makefile"
+          grep -Fx "PKG_SOURCE_VERSION:=$UPSTREAM_TAG" "$makefile"
+
+          git diff --check
+
+      - name: 提交 hiddify-core 更新
+        if: steps.upstream.outputs.changed == 'true'
+        env:
+          PACKAGE_BRANCH: ${{ github.event.repository.default_branch }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          message="chore: 更新 hiddify-core 至 ${UPSTREAM_VERSION}"
+
+          local_head="$(git rev-parse HEAD)"
+          git fetch origin "$PACKAGE_BRANCH"
+          remote_head="$(git rev-parse "origin/$PACKAGE_BRANCH")"
+          if [[ "$local_head" != "$remote_head" ]]; then
+            printf '远端分支已更新，为避免提交冲突，本次任务停止：%s -> %s\n' \
+              "$local_head" "$remote_head" >&2
+            exit 75
+          fi
+
+          git add -- hiddify-core/Makefile
+          if git diff --cached --quiet; then
+            printf '没有需要提交的变更。\n'
+            exit 0
+          fi
+          git diff --cached --check
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "$message"
+          git push origin "HEAD:$PACKAGE_BRANCH"

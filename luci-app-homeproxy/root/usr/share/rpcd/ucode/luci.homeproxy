@@ -1,0 +1,637 @@
+#!/usr/bin/ucode
+/*
+ * SPDX-License-Identifier: GPL-2.0-only
+ *
+ * Copyright (C) 2023-2024 ImmortalWrt.org
+ */
+
+'use strict';
+
+import { access, error, lstat, popen, readfile, writefile } from 'fs';
+import { cursor } from 'uci';
+
+/* Kanged from ucode/luci */
+function shellquote(s) {
+	return `'${replace(s, "'", "'\\''")}'`;
+}
+
+function hasKernelModule(kmod) {
+	return (system(sprintf('[ -e "/lib/modules/$(uname -r)"/%s ]', shellquote(kmod))) === 0);
+}
+
+const HP_DIR = '/etc/homeproxy';
+const RUN_DIR = '/var/run/homeproxy';
+const PROG = '/usr/bin/hiddify-core';
+
+/* the API query spawns a client, keep it below the UI poll interval (5s) */
+const CURRENT_NODE_CACHE = RUN_DIR + '/current_node.json';
+const CURRENT_NODE_TTL = 4;
+
+/*
+ * Outbound tags are derived from the node labels, keep in sync with
+ * generate_client.uc.
+ */
+function nodeTagMap(uci) {
+	const reserved = {
+		'direct-out': true,
+		'block-out': true,
+		'main-out': true,
+		'main-udp-out': true,
+		'tailscale-out': true
+	};
+	const tags = {};
+
+	uci.foreach('homeproxy', 'node', (cfg) => {
+		const base = trim(cfg.label || '') || cfg['.name'];
+		let tag = base, suffix = 2;
+
+		while (reserved[tag])
+			tag = `${base} (${suffix++})`;
+
+		reserved[tag] = true;
+		tags[cfg['.name']] = tag;
+	});
+
+	return tags;
+}
+
+/*
+ * hiddify-core does not ship the `sing-box api` client, talk to the
+ * gRPC-web bridge of the API service directly instead.
+ */
+function grpcWebRequest(port, secret, method) {
+	let cmd = sprintf(
+		'timeout 1 wget -q -O - --header %s --post-data %s %s 2>"/dev/null"',
+		shellquote('Content-Type: application/grpc-web-text'),
+		shellquote('AAAAAAA='),	/* base64 encoded empty protobuf message */
+		shellquote(`http://127.0.0.1:${port}/daemon.StartedService/${method}`)
+	);
+
+	if (length(secret))
+		cmd = sprintf(
+			'timeout 1 wget -q -O - --header %s --header %s --post-data %s %s 2>"/dev/null"',
+			shellquote('Content-Type: application/grpc-web-text'),
+			shellquote(`Authorization: Bearer ${secret}`),
+			shellquote('AAAAAAA='),
+			shellquote(`http://127.0.0.1:${port}/daemon.StartedService/${method}`)
+		);
+
+	const fd = popen(cmd);
+
+	if (!fd)
+		return [];
+
+	let encoded = fd.read('all');
+
+	fd.close();
+
+	/* grpc-web encodes every frame as its own padded base64 block, decode
+	   each four character group separately, the tail cut by the timeout is
+	   shorter than a group and gets dropped by the loop condition */
+	let raw = '';
+
+	for (let i = 0; i + 4 <= length(encoded); i += 4) {
+		try {
+			raw += b64dec(substr(encoded, i, 4));
+		} catch (e) { }
+	}
+
+	let messages = [], pos = 0;
+
+	while (pos + 5 <= length(raw)) {
+		const flags = ord(substr(raw, pos, 1));
+		const len = (ord(substr(raw, pos + 1, 1)) * 16777216) +
+			    (ord(substr(raw, pos + 2, 1)) * 65536) +
+			    (ord(substr(raw, pos + 3, 1)) * 256) +
+			    ord(substr(raw, pos + 4, 1));
+
+		pos += 5;
+
+		if (len > length(raw) - pos)
+			break;
+
+		if (!(flags & 0x80))
+			push(messages, substr(raw, pos, len));
+
+		pos += len;
+	}
+
+	return messages;
+}
+
+/*
+ * Query the Clash API of hiddify-core. It listens on the loopback interface,
+ * on the dashboard port plus one (see generate_client.uc).
+ */
+function clashApiGet(port, secret, path) {
+	const cmd = sprintf(
+		'timeout 1 wget -q -O - %s %s 2>"/dev/null"',
+		length(secret) ? sprintf('--header %s', shellquote(`Authorization: Bearer ${secret}`)) : '',
+		shellquote(`http://127.0.0.1:${port}${path}`)
+	);
+	const fd = popen(cmd);
+
+	if (!fd)
+		return null;
+
+	const body = fd.read('all');
+
+	fd.close();
+
+	try {
+		return json(body);
+	} catch (e) {
+		return null;
+	}
+}
+
+/* percent-encode a path segment, the Clash API takes the proxy tag there */
+function urlEncode(str) {
+	let out = '';
+
+	for (let i = 0; i < length(str); i++) {
+		const ch = substr(str, i, 1), code = ord(ch);
+
+		if ((code >= 48 && code <= 57) || (code >= 65 && code <= 90) ||
+		    (code >= 97 && code <= 122) || ch === '-' || ch === '.' || ch === '_' || ch === '~')
+			out += ch;
+		else
+			out += sprintf('%%%02X', code);
+	}
+
+	return out;
+}
+
+function pbVarint(str, state) {
+	let value = 0, scale = 1;
+
+	while (state.pos < length(str)) {
+		const byte = ord(substr(str, state.pos++, 1));
+
+		value += (byte & 0x7f) * scale;
+
+		if (!(byte & 0x80))
+			break;
+
+		scale *= 128;
+	}
+
+	return value;
+}
+
+function pbParse(str, callback) {
+	const state = { pos: 0 };
+
+	while (state.pos < length(str)) {
+		const key = pbVarint(str, state);
+		const field = int(key / 8), wire = key % 8;
+
+		if (wire === 0)
+			callback(field, pbVarint(str, state));
+		else if (wire === 2) {
+			const len = pbVarint(str, state);
+
+			if (len > length(str) - state.pos)
+				break;
+
+			callback(field, substr(str, state.pos, len));
+			state.pos += len;
+		} else if (wire === 5)
+			state.pos += 4;
+		else if (wire === 1)
+			state.pos += 8;
+		else
+			break;
+	}
+}
+
+function parseTailscaleEndpoint(message) {
+	const endpoint = { tag: null, state: null, auth_url: null, network: null };
+
+	pbParse(message, (field, value) => {
+		if (field === 1)
+			endpoint.tag = value;
+		else if (field === 2)
+			endpoint.state = value;
+		else if (field === 4)
+			endpoint.auth_url = value;
+		else if (field === 5)
+			endpoint.network = value;
+	});
+
+	return endpoint;
+}
+
+const methods = {
+	acllist_read: {
+		args: { type: 'type' },
+		call: function(req) {
+			if (index(['direct_list', 'proxy_list'], req.args?.type) === -1)
+				return { content: null, error: 'illegal type' };
+
+			const filecontent = readfile(`${HP_DIR}/resources/${req.args?.type}.txt`);
+			return { content: filecontent };
+		}
+	},
+	acllist_write: {
+		args: { type: 'type', content: 'content' },
+		call: function(req) {
+			if (index(['direct_list', 'proxy_list'], req.args?.type) === -1)
+				return { result: false, error: 'illegal type' };
+
+			const file = `${HP_DIR}/resources/${req.args?.type}.txt`;
+			let content = req.args?.content;
+
+			/* Sanitize content */
+			if (content) {
+				content = trim(content);
+				content = replace(content, /\r\n?/g, '\n');
+				if (!match(content, /\n$/))
+					content += '\n';
+			}
+
+			system(`mkdir -p ${HP_DIR}/resources`);
+			writefile(file, content);
+
+			return { result: true };
+		}
+	},
+
+	certificate_write: {
+		args: { filename: 'filename' },
+		call: function(req) {
+			const writeCertificate = (filename, priv) => {
+				const tmpcert = '/tmp/homeproxy_certificate.tmp';
+				const filestat = lstat(tmpcert);
+
+				if (!filestat || filestat.type !== 'file' || filestat.size <= 0) {
+					system(`rm -f ${tmpcert}`);
+					return { result: false, error: 'empty certificate file' };
+				}
+
+				let filecontent = readfile(tmpcert);
+				if (is_binary(filecontent)) {
+					system(`rm -f ${tmpcert}`);
+					return { result: false, error: 'illegal file type: binary' };
+				}
+
+				/* Kanged from luci-proto-openconnect */
+				const beg = priv ? /^-----BEGIN (RSA|EC) PRIVATE KEY-----$/ : /^-----BEGIN CERTIFICATE-----$/,
+				      end = priv ? /^-----END (RSA|EC) PRIVATE KEY-----$/ : /^-----END CERTIFICATE-----$/,
+				      lines = split(trim(filecontent), /[\r\n]/);
+				let start = false, i;
+
+				for (i = 0; i < length(lines); i++) {
+					if (match(lines[i], beg))
+						start = true;
+					else if (start && !b64dec(lines[i]) && length(lines[i]) !== 64)
+						break;
+				}
+
+				if (!start || i < length(lines) - 1 || !match(lines[i], end)) {
+					system(`rm -f ${tmpcert}`);
+					return { result: false, error: 'this does not look like a correct PEM file' };
+				}
+
+				/* Sanitize certificate */
+				filecontent = trim(filecontent);
+				filecontent = replace(filecontent, /\r\n?/g, '\n');
+				if (!match(filecontent, /\n$/))
+					filecontent += '\n';
+
+				system(`mkdir -p ${HP_DIR}/certs`);
+				writefile(`${HP_DIR}/certs/${filename}.pem`, filecontent);
+				system(`rm -f ${tmpcert}`);
+
+				return { result: true };
+			};
+
+			const filename = req.args?.filename;
+			switch (filename) {
+			case 'client_ca':
+			case 'server_publickey':
+				return writeCertificate(filename, false);
+				break;
+			case 'server_privatekey':
+				return writeCertificate(filename, true);
+				break;
+			default:
+				return { result: false, error: 'illegal cerificate filename' };
+				break;
+			}
+		}
+	},
+
+	connection_check: {
+		args: { site: 'site' },
+		call: function(req) {
+			let url;
+			switch(req.args?.site) {
+			case 'baidu':
+				url = 'https://www.baidu.com';
+				break;
+			case 'google':
+				url = 'https://www.google.com';
+				break;
+			default:
+				return { result: false, error: 'illegal site' };
+				break;
+			}
+
+			return { result: (system(`/usr/bin/wget --spider -qT3 ${url} 2>"/dev/null"`, 3100) === 0) };
+		}
+	},
+
+	log_clean: {
+		args: { type: 'type' },
+		call: function(req) {
+			if (!(req.args?.type in ['homeproxy', 'sing-box-c', 'sing-box-s']))
+				return { result: false, error: 'illegal type' };
+
+			const filestat = lstat(`${RUN_DIR}/${req.args?.type}.log`);
+			if (filestat)
+				writefile(`${RUN_DIR}/${req.args?.type}.log`, '');
+			return { result: true };
+		}
+	},
+
+	singbox_generator: {
+		args: { type: 'type', params: 'params' },
+		call: function(req) {
+			if (!(req.args?.type in ['ech-keypair', 'uuid', 'reality-keypair', 'vapid-keypair', 'wg-keypair']))
+				return { result: false, error: 'illegal type' };
+
+			const type = req.args?.type;
+
+			if (type === 'uuid') {
+				let uuid = '';
+
+				try {
+					uuid = trim(readfile('/proc/sys/kernel/random/uuid') || '');
+				} catch (e) {}
+
+				if (!length(uuid))
+					return { result: false, error: 'failed to read an uuid' };
+
+				return { result: { uuid } };
+			}
+
+			if (type in ['ech-keypair', 'vapid-keypair'])
+				return { result: false, error: `${type} generation is not supported by hiddify-core` };
+
+			/*
+			 * hiddify-core has no `generate` subcommand, vlessenc emits a
+			 * X25519 pair whose raw keys are the last dot-separated fields.
+			 */
+			const fd = popen(`${PROG} vlessenc --json 2>"/dev/null"`);
+
+			if (!fd)
+				return { result: false, error: 'failed to run hiddify-core' };
+
+			let output = '';
+
+			for (let line = fd.read('line'); length(line); line = fd.read('line'))
+				output += line;
+
+			fd.close();
+
+			let pair;
+			try {
+				pair = json(output);
+			} catch (e) {
+				return { result: false, error: 'failed to generate a keypair' };
+			}
+
+			const fields = split(pair?.decryption || '', '.');
+			const private_key = length(fields) ? fields[length(fields) - 1] : '';
+			const pub_fields = split(pair?.encryption || '', '.');
+			const public_key = length(pub_fields) ? pub_fields[length(pub_fields) - 1] : '';
+
+			if (!length(private_key) || !length(public_key))
+				return { result: false, error: 'failed to generate a keypair' };
+
+			if (type === 'wg-keypair') {
+				/* WireGuard keys use the standard base64 alphabet */
+				let std_private = replace(replace(private_key, '-', '+'), '_', '/');
+				let std_public = replace(replace(public_key, '-', '+'), '_', '/');
+
+				while (length(std_private) % 4)
+					std_private += '=';
+				while (length(std_public) % 4)
+					std_public += '=';
+
+				return { result: { private_key: std_private, public_key: std_public } };
+			}
+
+			return { result: { private_key, public_key } };
+		}
+	},
+
+	current_node_get: {
+		call: function() {
+			const uci = cursor();
+			uci.load('homeproxy');
+
+			const main_node = trim(uci.get('homeproxy', 'config', 'main_node') || 'nil');
+
+			if (!length(main_node) || main_node === 'nil')
+				return { mode: 'nil', active: null, error: null };
+
+			const nodeInfo = (id) => {
+				const cfg = uci.get_all('homeproxy', id);
+
+				if (!cfg || cfg['.type'] !== 'node')
+					return { id, label: id, type: null };
+
+				const label = trim(cfg.label || '');
+				const address = trim(cfg.address || '');
+
+				return {
+					id,
+					label: label || ((address && cfg.port) ? `${address}:${cfg.port}` : id),
+					type: cfg.type || null
+				};
+			};
+
+			const port = (int(uci.get('homeproxy', 'config', 'dashboard_port')) || 9096) + 1;
+			const secret = uci.get('homeproxy', 'config', 'dashboard_secret') || '';
+
+			/* the last delay the core recorded for an outbound, the Clash API
+			   keeps the history for single nodes as well */
+			const delayFrom = (proxy) => {
+				const history = proxy ? proxy.history : null;
+
+				if (!length(history || []))
+					return null;
+
+				/* 0 marks a failed test and 65535 is the failed marker of the
+				   core, neither may be rendered as a delay */
+				const last = history[length(history) - 1];
+
+				return (last && last.delay > 0 && last.delay < 60000) ? `${last.delay}ms` : null;
+			};
+
+			const tags = nodeTagMap(uci);
+
+			if (main_node !== 'urltest' && main_node !== 'fallback')
+				return {
+					mode: 'node',
+					active: nodeInfo(main_node),
+					delay: delayFrom(clashApiGet(port, secret, `/proxies/${urlEncode(tags[main_node] || '')}`)),
+					error: null
+				};
+
+			const cache_stat = lstat(CURRENT_NODE_CACHE);
+			if (cache_stat && cache_stat.type === 'file' &&
+			    (time() - cache_stat.mtime) < CURRENT_NODE_TTL) {
+				let cached = null;
+
+				try {
+					cached = json(readfile(CURRENT_NODE_CACHE));
+				} catch (e) { cached = null; }
+
+				if (cached && cached.mode === main_node)
+					return cached;
+			}
+
+			/* URLTest and fallback: ask the Clash API which outbound is
+			   currently used and what its last measured delay was. The group
+			   object carries the history of the selected member, so one
+			   request is enough. */
+			const group = clashApiGet(port, secret, '/proxies/main-out');
+
+			if (!group || !length(group.now || ''))
+				return { mode: main_node, active: null, error: 'api_unavailable' };
+
+			const tag = group.now;
+			const delay = delayFrom(group);
+
+			let id = null;
+
+			for (let node, node_tag in tags) {
+				if (node_tag === tag) {
+					id = node;
+					break;
+				}
+			}
+
+			const result = {
+				mode: main_node,
+				active: id ? nodeInfo(id) : { id: null, label: tag, type: null },
+				delay,
+				error: null
+			};
+
+			writefile(CURRENT_NODE_CACHE, sprintf('%.J', result));
+
+			return result;
+		}
+	},
+
+	singbox_get_features: {
+		call: function() {
+			let features = {};
+
+			const fd = popen(`${PROG} version`);
+			if (fd) {
+				for (let line = fd.read('line'); length(line); line = fd.read('line')) {
+					let version = match(trim(line), /^hiddify-core version ([^ ]+)/);
+					if (version)
+						features.version = version[1];
+
+					let tags = match(trim(line), /^Tags: (.*)/);
+					if (tags)
+						for (let i in split(tags[1], ','))
+							features[i] = true;
+				}
+
+				fd.close();
+			}
+
+			features.hp_has_ip_full = access('/usr/libexec/ip-full');
+			features.hp_has_tcp_brutal = hasKernelModule('brutal.ko');
+			features.hp_has_tproxy = hasKernelModule('nft_tproxy.ko') || access('/etc/modules.d/nft-tproxy');
+			features.hp_has_tun = hasKernelModule('tun.ko') || access('/etc/modules.d/30-tun');
+
+			return features;
+		}
+	},
+
+	tailscale_status: {
+		call: function() {
+			const uci = cursor();
+			uci.load('homeproxy');
+
+			if (uci.get('homeproxy', 'tailscale', 'enabled') !== '1')
+				return { state: 'disabled' };
+
+			const port = int(uci.get('homeproxy', 'config', 'dashboard_port')) || 9096;
+			const secret = uci.get('homeproxy', 'config', 'dashboard_secret') || '';
+
+			const messages = grpcWebRequest(port, secret, 'SubscribeTailscaleStatus');
+			let result = null;
+
+			for (let message in messages)
+				pbParse(message, (field, value) => {
+					if (field !== 1)
+						return;
+
+					const endpoint = parseTailscaleEndpoint(value);
+
+					if (endpoint.tag !== 'tailscale-out')
+						return;
+
+					result = {
+						state: endpoint.state || 'unavailable',
+						auth_url: endpoint.auth_url,
+						network: endpoint.network
+					};
+				});
+
+			if (!result)
+				return { state: 'unavailable' };
+
+			if (result.state === 'Running')
+				delete result.auth_url;
+
+			return result;
+		}
+	},
+
+	resources_get_version: {
+		args: { type: 'type' },
+		call: function(req) {
+			const type = req.args?.type;
+			if (!(type in ['china_ip4', 'china_ip6', 'dashboard']))
+				return { version: null, error: 'illegal type' };
+
+			/* The dashboard keeps its version file in its own directory and
+			 * stores the build date on its first line, the commit SHA on the
+			 * second one; only the former is displayed. */
+			const versionfile = (type === 'dashboard') ?
+				`${HP_DIR}/dashboard/dashboard.ver` : `${HP_DIR}/resources/${type}.ver`;
+
+			const content = trim(readfile(versionfile) || '');
+
+			if (type === 'dashboard') {
+				const lines = split(content, /\r?\n/);
+				return { version: trim(lines[0] || ''), error: error() };
+			}
+
+			return { version: content, error: error() };
+		}
+	},
+	resources_update: {
+		args: { type: 'type' },
+		call: function(req) {
+			const type = req.args?.type;
+			if (!(type in ['china_ip4', 'china_ip6', 'dashboard']))
+				return { status: 255, error: 'illegal type' };
+
+			const exit_code = system(`${HP_DIR}/scripts/update_resources.sh ${shellquote(type)}`);
+			return { status: exit_code };
+		}
+	}
+};
+
+return { 'luci.homeproxy': methods };
