@@ -75,7 +75,6 @@ function parseShareLink(uri, features) {
 				type: 'hysteria',
 				address: url.hostname,
 				port: url.port || '80',
-				hysteria_protocol: params.get('protocol') || 'udp',
 				hysteria_auth_type: params.get('auth') ? 'string' : null,
 				hysteria_auth_payload: params.get('auth'),
 				hysteria_obfs_password: params.get('obfsParam'),
@@ -659,17 +658,6 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o.placeholder = '30';
 	o.depends({'type': 'hysteria', 'hysteria_hopping_port': /[\s\S]/});
 	o.depends({'type': 'hysteria2', 'hysteria_hopping_port': /[\s\S]/});
-	o.modalonly = true;
-
-	o = s.option(form.ListValue, 'hysteria_protocol', _('Protocol'));
-	o.value('udp');
-	/* WeChat-Video / FakeTCP are unsupported by sing-box currently
-	 * o.value('wechat-video');
-	 * o.value('faketcp');
-	 */
-	o.default = 'udp';
-	o.depends('type', 'hysteria');
-	o.rmempty = false;
 	o.modalonly = true;
 
 	o = s.option(form.ListValue, 'hysteria_auth_type', _('Authentication type'));

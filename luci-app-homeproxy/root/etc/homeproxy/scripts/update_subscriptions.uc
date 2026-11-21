@@ -161,7 +161,6 @@ function parse_uri(uri) {
 				type: 'hysteria',
 				address: url.hostname,
 				port: url.port,
-				hysteria_protocol: params.protocol || 'udp',
 				hysteria_auth_type: params.auth ? 'string' : null,
 				hysteria_auth_payload: params.auth,
 				hysteria_obfs_password: params.obfsParam,
