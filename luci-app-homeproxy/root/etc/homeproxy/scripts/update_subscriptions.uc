@@ -40,6 +40,17 @@ const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || 
 /* UCI config end */
 
 /* String helper start */
+function reserve_label(used, label, fallback) {
+	const base = trim(label || '') || fallback;
+	let candidate = base, suffix = 2;
+
+	while (used[candidate])
+		candidate = `${base} (${suffix++})`;
+	used[candidate] = true;
+
+	return candidate;
+}
+
 function filter_check(name) {
 	if (isEmpty(name) || filter_mode === 'disabled' || isEmpty(filter_keywords))
 		return false;
@@ -601,6 +612,7 @@ function main() {
 		url = replace(url, /#.*$/, '');
 		const groupHash = md5(url);
 		node_cache[groupHash] = {};
+		const label_occurrences = {};
 
 		const res = wGET(url, user_agent);
 		if (isEmpty(res)) {
@@ -630,21 +642,30 @@ function main() {
 
 			const label = config.label;
 			config.label = null;
-			const confHash = md5(sprintf('%J', config)),
-			      nameHash = md5(label);
+			const confHash = md5(sprintf('%J', config));
 			config.label = label;
 
 			if (filter_check(config.label))
 				log(sprintf('Skipping blacklist node: %s.', config.label));
-			else if (node_cache[groupHash][confHash] || node_cache[groupHash][nameHash])
+			else if (node_cache[groupHash][confHash])
 				log(sprintf('Skipping duplicate node: %s.', config.label));
 			else {
+				const occurrence = (label_occurrences[label] || 0) + 1;
+				label_occurrences[label] = occurrence;
+				const nameHash = md5(groupHash + ':' + label + (occurrence > 1 ? ':' + occurrence : ''));
+
+				if (node_cache[groupHash][nameHash]) {
+					log(sprintf('Skipping duplicate node: %s.', config.label));
+					continue;
+				}
+
 				if (config.tls === '1' && allow_insecure === '1')
 					config.tls_insecure = '1';
 				if (config.type in ['vless', 'vmess'])
 					config.packet_encoding = packet_encoding;
 
 				config.grouphash = groupHash;
+				config.__section_id = nameHash;
 				push(node_result, []);
 				push(node_result[length(node_result)-1], config);
 				node_cache[groupHash][confHash] = config;
@@ -670,6 +691,24 @@ function main() {
 
 		return false;
 	}
+
+	/* Keep node labels unique so the UI and the dashboard show distinguishable
+	   names: nodes left untouched by this update reserve their labels first,
+	   then the fetched nodes get a numeric suffix when their label collides. */
+	const used_labels = {
+		'direct-out': true,
+		'block-out': true,
+		'main-out': true,
+		'tailscale-out': true
+	};
+	uci.foreach(uciconfig, ucinode, (cfg) => {
+		if (!cfg.grouphash || (node_cache[cfg.grouphash] && length(node_cache[cfg.grouphash]) === 0))
+			reserve_label(used_labels, cfg.label, cfg['.name']);
+	});
+	for (let nodes in node_result)
+		map(nodes, (node) => {
+			node.label = reserve_label(used_labels, node.label, node.__section_id);
+		});
 
 	let added = 0, removed = 0;
 	uci.foreach(uciconfig, ucinode, (cfg) => {
@@ -701,9 +740,12 @@ function main() {
 			if (node.isExisting)
 				return null;
 
-			const nameHash = md5(node.label);
+			const nameHash = node.__section_id;
 			uci.set(uciconfig, nameHash, 'node');
-			map(keys(node), (v) => uci.set(uciconfig, nameHash, v, node[v]));
+			map(keys(node), (v) => {
+				if (!match(v, /^__/))
+					uci.set(uciconfig, nameHash, v, node[v]);
+			});
 
 			added++;
 			log(sprintf('Adding node: %s.', node.label));
