@@ -337,7 +337,7 @@ return view.extend({
 		o.value('parallel', _('Parallel (query all at once)'));
 		o.value('fastest', _('Fastest (re-test periodically)'));
 		o.value('stable', _('Stable (keep the working server)'));
-		o.default = 'sequential';
+		o.default = 'parallel';
 		o.rmempty = false;
 
 		o = s.taboption('routing', form.ListValue, 'routing_mode', _('Routing mode'));

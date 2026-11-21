@@ -86,7 +86,7 @@ if (!wan_dns)
 
 const dns_port = uci.get(uciconfig, uciinfra, 'dns_port') || '5333';
 
-const dns_fallback_strategy = uci.get(uciconfig, ucimain, 'dns_fallback_strategy') || 'sequential';
+const dns_fallback_strategy = uci.get(uciconfig, ucimain, 'dns_fallback_strategy') || 'parallel';
 
 /*
  * The configured servers are one group, there is no separate primary and

@@ -59,7 +59,7 @@ for (let option in [ 'dns_server_fallback', 'china_dns_server_fallback' ])
 		uci.delete(uciconfig, ucimain, option);
 
 if (isEmpty(uci.get(uciconfig, ucimain, 'dns_fallback_strategy')))
-	uci.set(uciconfig, ucimain, 'dns_fallback_strategy', 'sequential');
+	uci.set(uciconfig, ucimain, 'dns_fallback_strategy', 'parallel');
 
 /* the dashboard was introduced */
 if (isEmpty(uci.get(uciconfig, ucimain, 'dashboard_port')))
