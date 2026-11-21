@@ -251,7 +251,7 @@ chain dstnat {
 	{% if (control_info.listen_interfaces): %}
 	meta iifname {{ array_to_nftarr(control_info.listen_interfaces) }}
 	{%- endif /* listen_interfaces */ %}
-	meta nfproto { ipv4, ipv6 } udp dport 53 counter redirect to :{{ dns_port }} comment "!{{ cfgname }}: DNS hijack"
+	meta nfproto { ipv4, ipv6 } meta l4proto { tcp, udp } th dport 53 counter redirect to :{{ dns_port }} comment "!{{ cfgname }}: DNS hijack"
 {% endif /* dns_hijacked */ %}
 {% if (match(proxy_mode, /redirect/)): %}
 	meta nfproto { {{ (ipv6_support === '1') ? 'ipv4, ipv6' : 'ipv4' }} } meta l4proto tcp jump homeproxy_redirect_lanac
