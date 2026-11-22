@@ -24,7 +24,7 @@ GO_PKG_LDFLAGS:=-s -w -checklinkname=0
 GO_PKG_LDFLAGS_X:= \
 	$(GO_PKG)/v2/hcommon/constants.Version=$(PKG_VERSION) \
 	github.com/sagernet/sing-box/constant.Version=$(PKG_VERSION)
-GO_PKG_TAGS:=badlinkname,tfogo_checklinkname0,with_acme,with_clash_api,with_dhcp,with_grpc,with_gvisor,with_kcp,with_low_memory,with_quic,with_tailscale,with_utls,with_v2ray_api,with_wireguard
+GO_PKG_TAGS:=badlinkname,tfogo_checklinkname0,with_acme,with_clash_api,with_conntrack,with_dhcp,with_grpc,with_gvisor,with_kcp,with_low_memory,with_quic,with_tailscale,with_utls,with_v2ray_api,with_wireguard
 
 export GIT_CONFIG_COUNT:=2
 export GIT_CONFIG_KEY_0:=url.https://github.com/.insteadOf
