@@ -752,7 +752,7 @@ function main() {
 		});
 	uci.commit(uciconfig);
 
-	let need_restart = (via_proxy !== '1');
+	let need_restart = true;
 
 	/* Drop references to nodes that disappeared with this update: the URLTest
 	   lists of the main node and of the routing rules, and stale main nodes. */
