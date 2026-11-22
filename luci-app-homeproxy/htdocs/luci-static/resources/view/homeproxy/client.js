@@ -333,8 +333,8 @@ return view.extend({
 
 		o = s.taboption('dns', form.ListValue, 'dns_fallback_strategy', _('DNS group strategy'),
 			_('How the servers listed above are queried.'));
-		o.value('sequential', _('Sequential (try in order)'));
 		o.value('parallel', _('Parallel (query all at once)'));
+		o.value('sequential', _('Sequential (try in order)'));
 		o.value('fastest', _('Fastest (re-test periodically)'));
 		o.value('stable', _('Stable (keep the working server)'));
 		o.default = 'parallel';
