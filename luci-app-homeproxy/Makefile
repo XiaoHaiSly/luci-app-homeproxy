@@ -4,7 +4,7 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=The modern ImmortalWrt proxy platform for ARM64/AMD64
+LUCI_TITLE:=The modern ImmortalWrt proxy platform for ARM64/AMD64. Powered by Hiddify-Core
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:= \
 	+hiddify-core \

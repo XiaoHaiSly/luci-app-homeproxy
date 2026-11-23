@@ -2181,8 +2181,8 @@ msgstr "可接受的最低 TLS 版本。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:138
 #: htdocs/luci-static/resources/view/homeproxy/server.js:130
-msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64."
-msgstr "为 ARM64/AMD64 设计的现代 ImmortalWrt 代理平台。"
+msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64. Powered by Hiddify-Core"
+msgstr "为 ARM64/AMD64 设计的现代 ImmortalWrt 代理平台。 Powered by Hiddify-Core"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:1029
 msgid "The network interface to bind to."

@@ -182,7 +182,7 @@ return view.extend({
 		});
 
 		m = new form.Map('homeproxy', _('HomeProxy'),
-			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
+			_('The modern ImmortalWrt proxy platform for ARM64/AMD64. Powered by Hiddify-Core'));
 
 		/* Keep the last status so a re-render of the section does not show a blank bar */
 		let statusNode, statusHTML = '', serviceRunning = false;

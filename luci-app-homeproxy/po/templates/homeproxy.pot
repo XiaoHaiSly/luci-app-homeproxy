@@ -2139,7 +2139,7 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:138
 #: htdocs/luci-static/resources/view/homeproxy/server.js:130
-msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64."
+msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64. Powered by Hiddify-Core"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:1029
