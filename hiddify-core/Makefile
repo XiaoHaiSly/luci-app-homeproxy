@@ -13,7 +13,7 @@ PKG_LICENSE:=GPL-3.0-or-later
 PKG_LICENSE_FILES:=LICENSE.md
 PKG_MAINTAINER:=Hiddify <wrt@hiddify.com>
 
-PKG_BUILD_DEPENDS:=golang1.27/host
+PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
